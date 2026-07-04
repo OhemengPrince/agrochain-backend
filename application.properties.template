@@ -24,3 +24,7 @@ spring.mail.username=your_email@gmail.com
 spring.mail.password=your_app_password
 spring.mail.properties.mail.smtp.auth=true
 spring.mail.properties.mail.smtp.starttls.enable=true
+
+# Paystack
+paystack.secret.key=YOUR_PAYSTACK_TEST_SECRET_KEY
+paystack.public.key=YOUR_PAYSTACK_TEST_PUBLIC_KEY

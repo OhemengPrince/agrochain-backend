@@ -44,8 +44,9 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/auth/**", "/actuator/**").permitAll()
+                        .requestMatchers("/auth/**", "/actuator/**", "/ws/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/produce/catalogue", "/produce/scan").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/payments/webhook").permitAll()
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class);
