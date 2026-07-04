@@ -33,3 +33,6 @@ build/
 .vscode/
 
 run.log
+
+### Secrets ###
+src/main/resources/application.properties

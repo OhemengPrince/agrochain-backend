@@ -4,7 +4,7 @@ server.port=8080
 # Database
 spring.datasource.url=jdbc:postgresql://localhost:5432/agrochain_db
 spring.datasource.username=postgres
-spring.datasource.password=Progress123
+spring.datasource.password=YOUR_POSTGRES_PASSWORD
 spring.datasource.driver-class-name=org.postgresql.Driver
 
 # JPA
@@ -14,13 +14,13 @@ spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
 spring.jpa.properties.hibernate.format_sql=true
 
 # JWT
-jwt.secret=agrochain_super_secret_key_2024_ghana_farmers
+jwt.secret=YOUR_JWT_SECRET_KEY
 jwt.expiration=86400000
 
 # Mail (OTP)
 spring.mail.host=smtp.gmail.com
 spring.mail.port=587
-spring.mail.username=princeohemeng688@gmail.com
-spring.mail.password=hvzwkciuwotvcujd
+spring.mail.username=your_email@gmail.com
+spring.mail.password=your_app_password
 spring.mail.properties.mail.smtp.auth=true
 spring.mail.properties.mail.smtp.starttls.enable=true
