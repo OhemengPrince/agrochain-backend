@@ -1,0 +1,78 @@
+package com.agrochain.backend.service;
+
+import com.agrochain.backend.model.OtpChannel;
+import com.agrochain.backend.model.OtpPurpose;
+import com.agrochain.backend.model.OtpVerification;
+import com.agrochain.backend.repository.OtpVerificationRepository;
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import java.security.SecureRandom;
+import java.time.LocalDateTime;
+import java.util.Optional;
+
+@Service
+@RequiredArgsConstructor
+public class OtpService {
+
+    private static final int OTP_LENGTH = 6;
+    private static final int OTP_VALIDITY_MINUTES = 10;
+
+    private final OtpVerificationRepository otpVerificationRepository;
+    private final SecureRandom secureRandom = new SecureRandom();
+
+    public String generateOtp() {
+        int otp = secureRandom.nextInt(1_000_000);
+        return String.format("%0" + OTP_LENGTH + "d", otp);
+    }
+
+    public void saveOtp(String email, String otp, OtpPurpose purpose, OtpChannel channel) {
+        OtpVerification otpVerification = OtpVerification.builder()
+                .email(email)
+                .otpCode(otp)
+                .purpose(purpose)
+                .channel(channel)
+                .expiresAt(LocalDateTime.now().plusMinutes(OTP_VALIDITY_MINUTES))
+                .isUsed(false)
+                .build();
+        otpVerificationRepository.save(otpVerification);
+    }
+
+    public boolean isOtpValid(String email, String otp, OtpPurpose purpose) {
+        return findValidOtp(email, otp, purpose).isPresent();
+    }
+
+    public boolean verifyOtp(String email, String otp, OtpPurpose purpose) {
+        Optional<OtpVerification> otpVerificationOpt = findValidOtp(email, otp, purpose);
+
+        if (otpVerificationOpt.isEmpty()) {
+            return false;
+        }
+
+        OtpVerification otpVerification = otpVerificationOpt.get();
+        otpVerification.setUsed(true);
+        otpVerificationRepository.save(otpVerification);
+        return true;
+    }
+
+    private Optional<OtpVerification> findValidOtp(String email, String otp, OtpPurpose purpose) {
+        Optional<OtpVerification> otpVerificationOpt =
+                otpVerificationRepository.findByEmailAndOtpCodeAndIsUsedFalse(email, otp);
+
+        if (otpVerificationOpt.isEmpty()) {
+            return Optional.empty();
+        }
+
+        OtpVerification otpVerification = otpVerificationOpt.get();
+
+        if (otpVerification.getPurpose() != purpose) {
+            return Optional.empty();
+        }
+
+        if (otpVerification.getExpiresAt().isBefore(LocalDateTime.now())) {
+            return Optional.empty();
+        }
+
+        return otpVerificationOpt;
+    }
+}
