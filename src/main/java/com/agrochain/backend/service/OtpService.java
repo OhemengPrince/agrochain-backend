@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 @Service
@@ -16,7 +17,7 @@ import java.util.Optional;
 public class OtpService {
 
     private static final int OTP_LENGTH = 6;
-    private static final int OTP_VALIDITY_MINUTES = 10;
+    private static final int OTP_VALIDITY_MINUTES = 5;
 
     private final OtpVerificationRepository otpVerificationRepository;
     private final SecureRandom secureRandom = new SecureRandom();
@@ -40,6 +41,16 @@ public class OtpService {
 
     public boolean isOtpValid(String email, String otp, OtpPurpose purpose) {
         return findValidOtp(email, otp, purpose).isPresent();
+    }
+
+    public void invalidateExistingOtps(String email, OtpPurpose purpose) {
+        List<OtpVerification> existing = otpVerificationRepository.findByEmailAndPurposeAndIsUsedFalse(email, purpose);
+        existing.forEach(otpVerification -> otpVerification.setUsed(true));
+        otpVerificationRepository.saveAll(existing);
+    }
+
+    public void deleteAllForEmail(String email) {
+        otpVerificationRepository.deleteByEmail(email);
     }
 
     public boolean verifyOtp(String email, String otp, OtpPurpose purpose) {

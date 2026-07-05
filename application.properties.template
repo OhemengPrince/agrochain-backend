@@ -1,5 +1,6 @@
 spring.application.name=agrochain-backend
 server.port=8080
+server.servlet.context-path=/api
 
 # Database
 spring.datasource.url=jdbc:postgresql://localhost:5432/agrochain_db
@@ -18,13 +19,18 @@ jwt.secret=YOUR_JWT_SECRET_KEY
 jwt.expiration=86400000
 
 # Mail (OTP)
-spring.mail.host=smtp.gmail.com
+spring.mail.host=smtp-relay.brevo.com
 spring.mail.port=587
-spring.mail.username=your_email@gmail.com
-spring.mail.password=your_app_password
+spring.mail.username=YOUR_BREVO_SMTP_LOGIN
+spring.mail.password=YOUR_BREVO_SMTP_KEY
 spring.mail.properties.mail.smtp.auth=true
 spring.mail.properties.mail.smtp.starttls.enable=true
 
 # Paystack
 paystack.secret.key=YOUR_PAYSTACK_TEST_SECRET_KEY
 paystack.public.key=YOUR_PAYSTACK_TEST_PUBLIC_KEY
+
+# Actuator
+management.endpoints.web.exposure.include=health
+management.endpoint.health.show-details=never
+management.health.mail.enabled=false
