@@ -44,6 +44,15 @@ public class BookingService {
             throw new BadRequestException("Equipment is not available for booking");
         }
 
+        boolean hasOverlap = bookingRepository
+                .findByEquipmentAndStatusIn(equipment, List.of(BookingStatus.PENDING, BookingStatus.CONFIRMED))
+                .stream()
+                .anyMatch(existing -> !request.getStartDate().isAfter(existing.getEndDate())
+                        && !existing.getStartDate().isAfter(request.getEndDate()));
+        if (hasOverlap) {
+            throw new BadRequestException("Equipment is already booked for the selected dates");
+        }
+
         long days = ChronoUnit.DAYS.between(request.getStartDate(), request.getEndDate()) + 1;
         BigDecimal totalCost = equipment.getDailyRate().multiply(BigDecimal.valueOf(days));
 

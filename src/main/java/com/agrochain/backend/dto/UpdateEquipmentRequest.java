@@ -1,6 +1,7 @@
 package com.agrochain.backend.dto;
 
 import com.agrochain.backend.model.EquipmentCategory;
+import jakarta.validation.constraints.DecimalMin;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -17,7 +18,10 @@ public class UpdateEquipmentRequest {
     private String name;
     private EquipmentCategory category;
     private String description;
+
+    @DecimalMin(value = "0.0", inclusive = false, message = "Daily rate must be greater than 0")
     private BigDecimal dailyRate;
+
     private String region;
     private String district;
     private String imageUrl;

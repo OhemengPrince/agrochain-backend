@@ -26,8 +26,8 @@ public class PaymentController {
     }
 
     @GetMapping("/verify/{reference}")
-    public ResponseEntity<PaymentResponse> verifyPayment(@PathVariable String reference) {
-        return ResponseEntity.ok(paymentService.verifyPayment(reference));
+    public ResponseEntity<PaymentResponse> verifyPayment(Authentication authentication, @PathVariable String reference) {
+        return ResponseEntity.ok(paymentService.verifyPayment(authentication.getName(), reference));
     }
 
     @GetMapping("/history")

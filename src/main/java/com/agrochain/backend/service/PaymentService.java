@@ -61,6 +61,9 @@ public class PaymentService {
         if (request.getBookingId() != null) {
             booking = bookingRepository.findById(request.getBookingId())
                     .orElseThrow(() -> new ResourceNotFoundException("Booking not found"));
+            if (!booking.getFarmer().getEmail().equals(userEmail)) {
+                throw new UnauthorizedException("You do not own this booking");
+            }
         }
 
         MarketplaceListing listing = null;
@@ -75,7 +78,8 @@ public class PaymentService {
 
         Map<String, Object> body = new HashMap<>();
         body.put("email", user.getEmail());
-        body.put("amount", request.getAmount().multiply(BigDecimal.valueOf(100)).intValue());
+        body.put("amount", request.getAmount().multiply(BigDecimal.valueOf(100))
+                .setScale(0, java.math.RoundingMode.HALF_UP).intValueExact());
         body.put("currency", "GHS");
         body.put("mobile_money", momo);
 
@@ -113,9 +117,13 @@ public class PaymentService {
         return PaymentMapper.toResponse(saved);
     }
 
-    public PaymentResponse verifyPayment(String reference) {
+    public PaymentResponse verifyPayment(String userEmail, String reference) {
         Payment payment = paymentRepository.findByPaystackReference(reference)
                 .orElseThrow(() -> new ResourceNotFoundException("Payment not found for this reference"));
+
+        if (!payment.getUser().getEmail().equals(userEmail)) {
+            throw new UnauthorizedException("You do not own this payment");
+        }
 
         HttpHeaders headers = new HttpHeaders();
         headers.setBearerAuth(paystackSecretKey);

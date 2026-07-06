@@ -54,7 +54,7 @@ public class EquipmentController {
     @PutMapping("/{id}")
     public ResponseEntity<EquipmentResponse> updateEquipment(Authentication authentication,
                                                               @PathVariable Long id,
-                                                              @RequestBody UpdateEquipmentRequest request) {
+                                                              @Valid @RequestBody UpdateEquipmentRequest request) {
         return ResponseEntity.ok(equipmentService.updateEquipment(authentication.getName(), id, request));
     }
 

@@ -67,23 +67,9 @@ public class OtpService {
     }
 
     private Optional<OtpVerification> findValidOtp(String email, String otp, OtpPurpose purpose) {
-        Optional<OtpVerification> otpVerificationOpt =
-                otpVerificationRepository.findByEmailAndOtpCodeAndIsUsedFalse(email, otp);
-
-        if (otpVerificationOpt.isEmpty()) {
-            return Optional.empty();
-        }
-
-        OtpVerification otpVerification = otpVerificationOpt.get();
-
-        if (otpVerification.getPurpose() != purpose) {
-            return Optional.empty();
-        }
-
-        if (otpVerification.getExpiresAt().isBefore(LocalDateTime.now())) {
-            return Optional.empty();
-        }
-
-        return otpVerificationOpt;
+        return otpVerificationRepository.findByEmailAndOtpCodeAndIsUsedFalse(email, otp).stream()
+                .filter(candidate -> candidate.getPurpose() == purpose)
+                .filter(candidate -> candidate.getExpiresAt().isAfter(LocalDateTime.now()))
+                .findFirst();
     }
 }
