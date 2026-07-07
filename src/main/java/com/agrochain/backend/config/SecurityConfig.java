@@ -46,6 +46,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/auth/**", "/actuator/**", "/ws/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/produce/catalogue", "/produce/scan").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/files/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/payments/webhook").permitAll()
                         .anyRequest().authenticated()
                 )
