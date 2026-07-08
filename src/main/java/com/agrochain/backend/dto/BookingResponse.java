@@ -20,7 +20,9 @@ public class BookingResponse {
     private Long id;
     private Long equipmentId;
     private String equipmentName;
+    private Long farmerId;
     private String farmerName;
+    private Long ownerId;
     private String ownerName;
     private LocalDate startDate;
     private LocalDate endDate;

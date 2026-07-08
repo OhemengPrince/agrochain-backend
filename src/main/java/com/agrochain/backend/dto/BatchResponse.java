@@ -27,6 +27,7 @@ public class BatchResponse {
     private BatchStatus status;
     private String qrCodeValue;
     private String inputs;
+    private Long farmerId;
     private String farmerName;
     private String farmerPhone;
     private List<BatchStageResponse> stages;

@@ -30,6 +30,7 @@ public class EquipmentResponse {
     @JsonProperty("isAvailable")
     private boolean isAvailable;
 
+    private Long ownerId;
     private String ownerName;
     private String ownerPhone;
     private LocalDateTime createdAt;

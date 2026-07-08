@@ -23,6 +23,7 @@ public final class MarketplaceMapper {
                 .contactPreference(listing.getContactPreference())
                 .status(listing.getStatus())
                 .viewCount(listing.getViewCount())
+                .sellerId(listing.getSeller().getId())
                 .sellerName(listing.getSeller().getFullName())
                 .sellerPhone(listing.getSeller().getPhoneNumber())
                 .sellerRating(sellerRating)

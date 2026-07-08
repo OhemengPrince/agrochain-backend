@@ -31,6 +31,7 @@ public class ListingResponse {
     private ContactPreference contactPreference;
     private ListingStatus status;
     private Integer viewCount;
+    private Long sellerId;
     private String sellerName;
     private String sellerPhone;
     private Double sellerRating;

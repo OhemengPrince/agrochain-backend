@@ -34,6 +34,7 @@ public final class ProduceBatchMapper {
                 .status(batch.getStatus())
                 .qrCodeValue(batch.getQrCodeValue())
                 .inputs(batch.getInputs())
+                .farmerId(batch.getFarmer().getId())
                 .farmerName(batch.getFarmer().getFullName())
                 .farmerPhone(batch.getFarmer().getPhoneNumber())
                 .stages(stages.stream().map(ProduceBatchMapper::toStageResponse).toList())

@@ -19,6 +19,7 @@ public final class EquipmentMapper {
                 .district(equipment.getDistrict())
                 .imageUrl(equipment.getImageUrl())
                 .isAvailable(equipment.isAvailable())
+                .ownerId(equipment.getOwner().getId())
                 .ownerName(equipment.getOwner().getFullName())
                 .ownerPhone(equipment.getOwner().getPhoneNumber())
                 .createdAt(equipment.getCreatedAt())
