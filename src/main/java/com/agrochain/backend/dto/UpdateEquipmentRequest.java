@@ -1,6 +1,7 @@
 package com.agrochain.backend.dto;
 
 import com.agrochain.backend.model.EquipmentCategory;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.constraints.DecimalMin;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -25,5 +26,7 @@ public class UpdateEquipmentRequest {
     private String region;
     private String district;
     private String imageUrl;
+
+    @JsonProperty("isAvailable")
     private Boolean isAvailable;
 }

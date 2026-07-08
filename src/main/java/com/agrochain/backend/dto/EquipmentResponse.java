@@ -1,6 +1,8 @@
 package com.agrochain.backend.dto;
 
 import com.agrochain.backend.model.EquipmentCategory;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -13,6 +15,7 @@ import java.time.LocalDateTime;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
+@JsonIgnoreProperties({"available"})
 public class EquipmentResponse {
 
     private Long id;
@@ -23,7 +26,10 @@ public class EquipmentResponse {
     private String region;
     private String district;
     private String imageUrl;
+
+    @JsonProperty("isAvailable")
     private boolean isAvailable;
+
     private String ownerName;
     private String ownerPhone;
     private LocalDateTime createdAt;
