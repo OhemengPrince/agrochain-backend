@@ -81,6 +81,7 @@ public class ChatService {
         return ChatMapper.toMessageResponse(saved);
     }
 
+    @Transactional
     public void markMessagesAsRead(String userEmail, Long roomId) {
         ChatRoom room = findRoomOrThrow(roomId);
         requireParticipant(room, userEmail);
@@ -90,6 +91,15 @@ public class ChatService {
                 .toList();
         unread.forEach(message -> message.setRead(true));
         chatMessageRepository.saveAll(unread);
+    }
+
+    // Socket.IO handlers run on Netty event-loop threads with no HTTP request
+    // (and therefore no open-in-view Hibernate session), so this needs its own
+    // transaction to safely touch the lazy participant proxies.
+    @Transactional(readOnly = true)
+    public void verifyParticipant(String userEmail, Long roomId) {
+        ChatRoom room = findRoomOrThrow(roomId);
+        requireParticipant(room, userEmail);
     }
 
     private long unreadCountForOtherParty(ChatRoom room, User user) {
