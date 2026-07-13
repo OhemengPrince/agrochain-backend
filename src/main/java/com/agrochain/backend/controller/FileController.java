@@ -40,6 +40,9 @@ public class FileController {
             case "png" -> MediaType.IMAGE_PNG;
             case "webp" -> MediaType.valueOf("image/webp");
             case "jpg", "jpeg" -> MediaType.IMAGE_JPEG;
+            case "m4a", "mp4" -> MediaType.valueOf("audio/mp4");
+            case "mp3" -> MediaType.valueOf("audio/mpeg");
+            case "wav" -> MediaType.valueOf("audio/wav");
             default -> MediaType.APPLICATION_OCTET_STREAM;
         };
     }

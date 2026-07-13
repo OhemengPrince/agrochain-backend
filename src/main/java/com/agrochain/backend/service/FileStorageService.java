@@ -20,7 +20,7 @@ import java.util.UUID;
 @Service
 public class FileStorageService {
 
-    private static final Set<String> ALLOWED_EXTENSIONS = Set.of("jpg", "jpeg", "png", "webp");
+    private static final Set<String> ALLOWED_EXTENSIONS = Set.of("jpg", "jpeg", "png", "webp", "m4a", "mp4", "mp3", "wav");
     private static final long MAX_FILE_SIZE = 5L * 1024 * 1024;
 
     private final Path uploadDir;
@@ -44,7 +44,7 @@ public class FileStorageService {
 
         String extension = getExtension(file.getOriginalFilename());
         if (extension.isEmpty() || !ALLOWED_EXTENSIONS.contains(extension)) {
-            throw new BadRequestException("Only image files (jpg, jpeg, png, webp) are allowed");
+            throw new BadRequestException("Only image files (jpg, jpeg, png, webp) or audio files (m4a, mp4, mp3, wav) are allowed");
         }
 
         String filename = UUID.randomUUID() + "." + extension;

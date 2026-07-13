@@ -1,18 +1,29 @@
 package com.agrochain.backend.service;
 
+import com.agrochain.backend.dto.TopRatedUserDto;
 import com.agrochain.backend.dto.UpdateProfileRequest;
 import com.agrochain.backend.dto.UserDto;
 import com.agrochain.backend.exception.ResourceNotFoundException;
+import com.agrochain.backend.model.ProduceBatch;
+import com.agrochain.backend.model.Role;
 import com.agrochain.backend.model.User;
+import com.agrochain.backend.repository.EquipmentRepository;
+import com.agrochain.backend.repository.ProduceBatchRepository;
 import com.agrochain.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class UserService {
 
     private final UserRepository userRepository;
+    private final EquipmentRepository equipmentRepository;
+    private final ProduceBatchRepository produceBatchRepository;
 
     public UserDto getCurrentUser(String email) {
         User user = userRepository.findByEmail(email)
@@ -39,5 +50,47 @@ public class UserService {
 
         User savedUser = userRepository.save(user);
         return UserMapper.toDto(savedUser);
+    }
+
+    public List<TopRatedUserDto> getTopRatedUsers(Role role, int limit) {
+        Pageable pageable = PageRequest.of(0, limit);
+        List<Object[]> rows = userRepository.findTopRatedUsers(role, pageable);
+
+        return rows.stream().map(row -> {
+            User user = (User) row[0];
+            double averageRating = ((Number) row[1]).doubleValue();
+            long totalReviews = ((Number) row[2]).longValue();
+
+            return TopRatedUserDto.builder()
+                    .id(user.getId())
+                    .fullName(user.getFullName())
+                    .role(user.getRole())
+                    .region(user.getRegion())
+                    .district(user.getDistrict())
+                    .profilePhotoUrl(user.getProfilePhotoUrl())
+                    .averageRating(Math.round(averageRating * 10) / 10.0)
+                    .totalReviews(totalReviews)
+                    .isVerified(true)
+                    .speciality(resolveSpeciality(user))
+                    .build();
+        }).toList();
+    }
+
+    private String resolveSpeciality(User user) {
+        if (user.getRole() == Role.FARMER) {
+            List<String> crops = produceBatchRepository.findByFarmer(user).stream()
+                    .map(ProduceBatch::getCropName)
+                    .distinct()
+                    .toList();
+            return crops.isEmpty() ? null : String.join(", ", crops);
+        }
+        if (user.getRole() == Role.EQUIPMENT_OWNER) {
+            List<String> categories = equipmentRepository.findByOwner(user).stream()
+                    .map(equipment -> equipment.getCategory().name())
+                    .distinct()
+                    .toList();
+            return categories.isEmpty() ? null : String.join(", ", categories);
+        }
+        return null;
     }
 }
