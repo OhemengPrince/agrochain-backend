@@ -1,5 +1,6 @@
 package com.agrochain.backend.dto;
 
+import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -9,11 +10,8 @@ import lombok.NoArgsConstructor;
 @Builder
 @NoArgsConstructor
 @AllArgsConstructor
-public class UpdateProfileRequest {
+public class UpdatePhotoUrlRequest {
 
-    private String fullName;
-    private String phoneNumber;
-    private String region;
-    private String district;
-    private String profilePhotoUrl;
+    @NotBlank(message = "photoUrl is required")
+    private String photoUrl;
 }

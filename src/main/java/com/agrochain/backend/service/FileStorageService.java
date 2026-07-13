@@ -20,6 +20,7 @@ import java.util.UUID;
 @Service
 public class FileStorageService {
 
+    private static final Set<String> IMAGE_EXTENSIONS = Set.of("jpg", "jpeg", "png", "webp");
     private static final Set<String> ALLOWED_EXTENSIONS = Set.of("jpg", "jpeg", "png", "webp", "m4a", "mp4", "mp3", "wav");
     private static final long MAX_FILE_SIZE = 5L * 1024 * 1024;
 
@@ -35,6 +36,16 @@ public class FileStorageService {
     }
 
     public String store(MultipartFile file) {
+        return store(file, ALLOWED_EXTENSIONS, "Only image files (jpg, jpeg, png, webp) or audio files (m4a, mp4, mp3, wav) are allowed");
+    }
+
+    // Stricter variant for profile photos — audio isn't a valid profile picture,
+    // even though the general upload endpoint accepts it for chat voice notes.
+    public String storeImage(MultipartFile file) {
+        return store(file, IMAGE_EXTENSIONS, "Only image files (jpg, jpeg, png, webp) are allowed");
+    }
+
+    private String store(MultipartFile file, Set<String> allowedExtensions, String rejectionMessage) {
         if (file == null || file.isEmpty()) {
             throw new BadRequestException("File must not be empty");
         }
@@ -43,8 +54,8 @@ public class FileStorageService {
         }
 
         String extension = getExtension(file.getOriginalFilename());
-        if (extension.isEmpty() || !ALLOWED_EXTENSIONS.contains(extension)) {
-            throw new BadRequestException("Only image files (jpg, jpeg, png, webp) or audio files (m4a, mp4, mp3, wav) are allowed");
+        if (extension.isEmpty() || !allowedExtensions.contains(extension)) {
+            throw new BadRequestException(rejectionMessage);
         }
 
         String filename = UUID.randomUUID() + "." + extension;

@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -24,6 +25,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final EquipmentRepository equipmentRepository;
     private final ProduceBatchRepository produceBatchRepository;
+    private final FileStorageService fileStorageService;
 
     public UserDto getCurrentUser(String email) {
         User user = userRepository.findByEmail(email)
@@ -47,6 +49,30 @@ public class UserService {
         if (request.getDistrict() != null) {
             user.setDistrict(request.getDistrict());
         }
+        if (request.getProfilePhotoUrl() != null) {
+            user.setProfilePhotoUrl(request.getProfilePhotoUrl());
+        }
+
+        User savedUser = userRepository.save(user);
+        return UserMapper.toDto(savedUser);
+    }
+
+    public UserDto uploadProfilePhoto(String email, MultipartFile photo) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        String filename = fileStorageService.storeImage(photo);
+        user.setProfilePhotoUrl("/api/files/" + filename);
+
+        User savedUser = userRepository.save(user);
+        return UserMapper.toDto(savedUser);
+    }
+
+    public UserDto updateProfilePhotoUrl(String email, String photoUrl) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        user.setProfilePhotoUrl(photoUrl);
 
         User savedUser = userRepository.save(user);
         return UserMapper.toDto(savedUser);
