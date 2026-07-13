@@ -11,6 +11,7 @@ import com.agrochain.backend.repository.EquipmentRepository;
 import com.agrochain.backend.repository.ProduceBatchRepository;
 import com.agrochain.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -20,6 +21,7 @@ import java.util.List;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class UserService {
 
     private final UserRepository userRepository;
@@ -50,10 +52,12 @@ public class UserService {
             user.setDistrict(request.getDistrict());
         }
         if (request.getProfilePhotoUrl() != null) {
+            log.info("Saving profilePhotoUrl: {}", request.getProfilePhotoUrl());
             user.setProfilePhotoUrl(request.getProfilePhotoUrl());
         }
 
         User savedUser = userRepository.save(user);
+        log.info("Saved user profilePhotoUrl: {}", savedUser.getProfilePhotoUrl());
         return UserMapper.toDto(savedUser);
     }
 
@@ -62,9 +66,12 @@ public class UserService {
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
         String filename = fileStorageService.storeImage(photo);
-        user.setProfilePhotoUrl("/api/files/" + filename);
+        String fileUrl = "/api/files/" + filename;
+        log.info("Saving profilePhotoUrl: {}", fileUrl);
+        user.setProfilePhotoUrl(fileUrl);
 
         User savedUser = userRepository.save(user);
+        log.info("Saved user profilePhotoUrl: {}", savedUser.getProfilePhotoUrl());
         return UserMapper.toDto(savedUser);
     }
 
