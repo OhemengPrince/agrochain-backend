@@ -1,14 +1,17 @@
 package com.agrochain.backend.service;
 
+import com.agrochain.backend.dto.PublicUserDto;
 import com.agrochain.backend.dto.TopRatedUserDto;
 import com.agrochain.backend.dto.UpdateProfileRequest;
 import com.agrochain.backend.dto.UserDto;
 import com.agrochain.backend.exception.ResourceNotFoundException;
 import com.agrochain.backend.model.ProduceBatch;
+import com.agrochain.backend.model.Review;
 import com.agrochain.backend.model.Role;
 import com.agrochain.backend.model.User;
 import com.agrochain.backend.repository.EquipmentRepository;
 import com.agrochain.backend.repository.ProduceBatchRepository;
+import com.agrochain.backend.repository.ReviewRepository;
 import com.agrochain.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,6 +30,7 @@ public class UserService {
     private final UserRepository userRepository;
     private final EquipmentRepository equipmentRepository;
     private final ProduceBatchRepository produceBatchRepository;
+    private final ReviewRepository reviewRepository;
     private final FileStorageService fileStorageService;
 
     public UserDto getCurrentUser(String email) {
@@ -83,6 +87,28 @@ public class UserService {
 
         User savedUser = userRepository.save(user);
         return UserMapper.toDto(savedUser);
+    }
+
+    // Public — served to unauthenticated callers, so only ever return fields
+    // that are safe to expose (see PublicUserDto for the exact contract).
+    public PublicUserDto getPublicProfile(Long id) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        List<Review> reviews = reviewRepository.findByReviewee(user);
+        Double averageRating = reviews.isEmpty() ? null
+                : Math.round(reviews.stream().mapToInt(Review::getRating).average().orElse(0) * 10) / 10.0;
+
+        return PublicUserDto.builder()
+                .id(user.getId())
+                .fullName(user.getFullName())
+                .role(user.getRole())
+                .region(user.getRegion())
+                .district(user.getDistrict())
+                .profilePhotoUrl(user.getProfilePhotoUrl())
+                .isVerified(user.isVerified())
+                .averageRating(averageRating)
+                .build();
     }
 
     public List<TopRatedUserDto> getTopRatedUsers(Role role, int limit) {

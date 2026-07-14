@@ -48,6 +48,11 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/produce/catalogue", "/produce/scan").permitAll()
                         .requestMatchers(HttpMethod.GET, "/files/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/users/top-rated").permitAll()
+                        // Must come before the /users/{id} permitAll rule below — that
+                        // pattern matches any single path segment, including "me", and
+                        // Spring Security uses first-match-wins ordering.
+                        .requestMatchers(HttpMethod.GET, "/users/me").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/users/{id}").permitAll()
                         .requestMatchers(HttpMethod.POST, "/payments/webhook").permitAll()
                         .anyRequest().authenticated()
                 )

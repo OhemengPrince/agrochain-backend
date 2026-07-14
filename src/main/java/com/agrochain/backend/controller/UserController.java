@@ -1,5 +1,6 @@
 package com.agrochain.backend.controller;
 
+import com.agrochain.backend.dto.PublicUserDto;
 import com.agrochain.backend.dto.TopRatedUserDto;
 import com.agrochain.backend.dto.UpdatePhotoUrlRequest;
 import com.agrochain.backend.dto.UpdateProfileRequest;
@@ -11,6 +12,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -56,5 +58,12 @@ public class UserController {
             @RequestParam(required = false) Role role,
             @RequestParam(defaultValue = "10") int limit) {
         return ResponseEntity.ok(userService.getTopRatedUsers(role, limit));
+    }
+
+    // Public — only ever returns PublicUserDto's narrow, safe field set.
+    // Used by the mobile Top Rated carousel to enrich profiles without a token.
+    @GetMapping("/{id}")
+    public ResponseEntity<PublicUserDto> getPublicProfile(@PathVariable Long id) {
+        return ResponseEntity.ok(userService.getPublicProfile(id));
     }
 }
