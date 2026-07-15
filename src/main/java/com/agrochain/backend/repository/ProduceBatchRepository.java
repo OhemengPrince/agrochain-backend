@@ -29,4 +29,10 @@ public interface ProduceBatchRepository extends JpaRepository<ProduceBatch, Long
                                       @Param("district") String district,
                                       @Param("query") String query,
                                       Pageable pageable);
+
+    @Query("SELECT b FROM ProduceBatch b WHERE " +
+            "b.status = com.agrochain.backend.model.BatchStatus.READY_FOR_SALE AND " +
+            "(LOWER(b.cropName) LIKE LOWER(CONCAT('%', CAST(:query AS string), '%')) OR " +
+            "LOWER(b.variety) LIKE LOWER(CONCAT('%', CAST(:query AS string), '%')))")
+    List<ProduceBatch> searchReadyForSale(@Param("query") String query, Pageable pageable);
 }

@@ -30,4 +30,9 @@ public interface EquipmentRepository extends JpaRepository<Equipment, Long> {
                             @Param("category") EquipmentCategory category,
                             @Param("query") String query,
                             Pageable pageable);
+
+    @Query("SELECT e FROM Equipment e WHERE e.isAvailable = true AND " +
+            "(LOWER(e.name) LIKE LOWER(CONCAT('%', CAST(:query AS string), '%')) OR " +
+            "LOWER(CAST(e.category AS string)) LIKE LOWER(CONCAT('%', CAST(:query AS string), '%')))")
+    List<Equipment> searchAvailable(@Param("query") String query, Pageable pageable);
 }

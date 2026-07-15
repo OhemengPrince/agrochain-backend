@@ -48,6 +48,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/produce/catalogue", "/produce/scan").permitAll()
                         .requestMatchers(HttpMethod.GET, "/files/**").permitAll()
                         .requestMatchers(HttpMethod.GET, "/market/prices").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/search").permitAll()
                         .requestMatchers(HttpMethod.GET, "/users/top-rated").permitAll()
                         // Must come before the /users/{id} permitAll rule below — that
                         // pattern matches any single path segment, including "me", and

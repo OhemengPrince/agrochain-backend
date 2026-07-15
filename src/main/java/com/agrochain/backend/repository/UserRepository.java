@@ -26,4 +26,12 @@ public interface UserRepository extends JpaRepository<User, Long> {
             "GROUP BY u " +
             "ORDER BY AVG(r.rating) DESC")
     List<Object[]> findTopRatedUsers(@Param("role") Role role, Pageable pageable);
+
+    // Left join so verified users with zero reviews still appear in search
+    // results (AVG(r.rating) comes back null for them).
+    @Query("SELECT u, AVG(r.rating) FROM User u LEFT JOIN Review r ON r.reviewee = u " +
+            "WHERE u.isVerified = true " +
+            "AND LOWER(u.fullName) LIKE LOWER(CONCAT('%', CAST(:query AS string), '%')) " +
+            "GROUP BY u")
+    List<Object[]> searchVerified(@Param("query") String query, Pageable pageable);
 }
