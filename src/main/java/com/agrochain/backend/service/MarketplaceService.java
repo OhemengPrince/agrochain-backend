@@ -7,6 +7,7 @@ import com.agrochain.backend.exception.UnauthorizedException;
 import com.agrochain.backend.model.ListingCategory;
 import com.agrochain.backend.model.ListingStatus;
 import com.agrochain.backend.model.MarketplaceListing;
+import com.agrochain.backend.model.NotificationType;
 import com.agrochain.backend.model.Review;
 import com.agrochain.backend.model.User;
 import com.agrochain.backend.repository.MarketplaceListingRepository;
@@ -24,6 +25,7 @@ public class MarketplaceService {
     private final MarketplaceListingRepository marketplaceListingRepository;
     private final UserRepository userRepository;
     private final ReviewRepository reviewRepository;
+    private final FollowService followService;
 
     public List<ListingResponse> getListings(ListingCategory category, String query) {
         return marketplaceListingRepository.search(category, query).stream()
@@ -65,6 +67,11 @@ public class MarketplaceService {
                 .build();
 
         MarketplaceListing saved = marketplaceListingRepository.save(listing);
+
+        followService.notifyFollowers(seller.getId(),
+                seller.getFullName() + " posted " + saved.getName() + " for GHS " + saved.getPrice(),
+                NotificationType.NEW_LISTING);
+
         return MarketplaceMapper.toResponse(saved, getSellerRating(seller));
     }
 

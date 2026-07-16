@@ -63,7 +63,18 @@ public class UserController {
     // Public — only ever returns PublicUserDto's narrow, safe field set.
     // Used by the mobile Top Rated carousel to enrich profiles without a token.
     @GetMapping("/{id}")
-    public ResponseEntity<PublicUserDto> getPublicProfile(@PathVariable Long id) {
-        return ResponseEntity.ok(userService.getPublicProfile(id));
+    public ResponseEntity<PublicUserDto> getPublicProfile(Authentication authentication, @PathVariable Long id) {
+        return ResponseEntity.ok(userService.getPublicProfile(id, resolveViewerId(authentication)));
+    }
+
+    // Spring Security's default anonymous auth fills unauthenticated requests
+    // with a non-null "anonymousUser" principal, so that has to be filtered
+    // out explicitly rather than just null-checking authentication.
+    private Long resolveViewerId(Authentication authentication) {
+        if (authentication == null || !authentication.isAuthenticated()
+                || "anonymousUser".equals(authentication.getName())) {
+            return null;
+        }
+        return userService.getCurrentUser(authentication.getName()).getId();
     }
 }

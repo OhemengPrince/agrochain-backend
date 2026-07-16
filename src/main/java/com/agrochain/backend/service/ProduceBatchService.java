@@ -24,6 +24,7 @@ public class ProduceBatchService {
     private final BatchStageRepository batchStageRepository;
     private final UserRepository userRepository;
     private final NotificationService notificationService;
+    private final FollowService followService;
 
     public BatchResponse createBatch(String farmerEmail, CreateBatchRequest request) {
         User farmer = getUserOrThrow(farmerEmail);
@@ -46,6 +47,11 @@ public class ProduceBatchService {
         ProduceBatch saved = produceBatchRepository.save(batch);
         saved.setQrCodeValue("AGROCHAIN-BATCH-" + saved.getId());
         saved = produceBatchRepository.save(saved);
+
+        followService.notifyFollowers(farmer.getId(),
+                farmer.getFullName() + " harvested " + saved.getQuantityKg() + "kg of " + saved.getCropName()
+                        + " - Ready for sale",
+                NotificationType.NEW_PRODUCE);
 
         return ProduceBatchMapper.toResponse(saved, List.of());
     }

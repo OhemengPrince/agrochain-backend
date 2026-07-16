@@ -1,13 +1,12 @@
 package com.agrochain.backend.controller;
 
-import com.agrochain.backend.dto.NotificationResponse;
+import com.agrochain.backend.dto.NotificationsListResponse;
 import com.agrochain.backend.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -18,7 +17,7 @@ public class NotificationController {
     private final NotificationService notificationService;
 
     @GetMapping
-    public ResponseEntity<List<NotificationResponse>> getNotifications(Authentication authentication) {
+    public ResponseEntity<NotificationsListResponse> getNotifications(Authentication authentication) {
         return ResponseEntity.ok(notificationService.getNotifications(authentication.getName()));
     }
 
@@ -29,8 +28,8 @@ public class NotificationController {
     }
 
     @PatchMapping("/read-all")
-    public ResponseEntity<Map<String, String>> markAllAsRead(Authentication authentication) {
-        notificationService.markAllAsRead(authentication.getName());
-        return ResponseEntity.ok(Map.of("message", "All notifications marked as read."));
+    public ResponseEntity<Map<String, Object>> markAllAsRead(Authentication authentication) {
+        long unreadCount = notificationService.markAllAsRead(authentication.getName());
+        return ResponseEntity.ok(Map.of("success", true, "unreadCount", unreadCount));
     }
 }

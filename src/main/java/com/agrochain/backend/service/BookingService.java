@@ -27,6 +27,7 @@ public class BookingService {
     private final UserRepository userRepository;
     private final ReviewRepository reviewRepository;
     private final NotificationService notificationService;
+    private final FollowService followService;
 
     public BookingResponse createBooking(String farmerEmail, CreateBookingRequest request) {
         User farmer = getUserOrThrow(farmerEmail);
@@ -110,6 +111,11 @@ public class BookingService {
                 "Booking Confirmed",
                 "Your booking for " + booking.getEquipment().getName() + " has been confirmed.",
                 NotificationType.BOOKING);
+
+        User owner = booking.getEquipment().getOwner();
+        followService.notifyFollowers(owner.getId(),
+                owner.getFullName() + " accepted a booking for " + booking.getEquipment().getName(),
+                NotificationType.BOOKING_ACCEPTED);
 
         return BookingMapper.toResponse(saved);
     }

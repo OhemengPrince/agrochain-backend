@@ -29,4 +29,10 @@ public class PublicUserDto {
     private boolean isVerified;
 
     private Double averageRating;
+    private Long followerCount;
+    private Long followingCount;
+
+    // Nullable — null means the caller is unauthenticated, not "not following".
+    @JsonProperty("isFollowing")
+    private Boolean isFollowing;
 }

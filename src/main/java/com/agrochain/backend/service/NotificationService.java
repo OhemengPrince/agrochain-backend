@@ -1,6 +1,7 @@
 package com.agrochain.backend.service;
 
 import com.agrochain.backend.dto.NotificationResponse;
+import com.agrochain.backend.dto.NotificationsListResponse;
 import com.agrochain.backend.exception.ResourceNotFoundException;
 import com.agrochain.backend.exception.UnauthorizedException;
 import com.agrochain.backend.model.Notification;
@@ -20,11 +21,17 @@ public class NotificationService {
     private final NotificationRepository notificationRepository;
     private final UserRepository userRepository;
 
-    public List<NotificationResponse> getNotifications(String userEmail) {
+    public NotificationsListResponse getNotifications(String userEmail) {
         User user = getUserOrThrow(userEmail);
-        return notificationRepository.findByUserOrderByCreatedAtDesc(user).stream()
+        List<NotificationResponse> notifications = notificationRepository.findByUserOrderByCreatedAtDesc(user).stream()
                 .map(NotificationMapper::toResponse)
                 .toList();
+        long unreadCount = notificationRepository.findByUserAndIsRead(user, false).size();
+
+        return NotificationsListResponse.builder()
+                .notifications(notifications)
+                .unreadCount(unreadCount)
+                .build();
     }
 
     public void markAsRead(String userEmail, Long notificationId) {
@@ -39,11 +46,12 @@ public class NotificationService {
         notificationRepository.save(notification);
     }
 
-    public void markAllAsRead(String userEmail) {
+    public long markAllAsRead(String userEmail) {
         User user = getUserOrThrow(userEmail);
         List<Notification> unread = notificationRepository.findByUserAndIsRead(user, false);
         unread.forEach(n -> n.setRead(true));
         notificationRepository.saveAll(unread);
+        return 0;
     }
 
     public void createNotification(Long userId, String title, String message, NotificationType type) {

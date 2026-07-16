@@ -7,6 +7,7 @@ import com.agrochain.backend.exception.ResourceNotFoundException;
 import com.agrochain.backend.exception.UnauthorizedException;
 import com.agrochain.backend.model.Equipment;
 import com.agrochain.backend.model.EquipmentCategory;
+import com.agrochain.backend.model.NotificationType;
 import com.agrochain.backend.model.Role;
 import com.agrochain.backend.model.User;
 import com.agrochain.backend.repository.EquipmentRepository;
@@ -16,6 +17,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @Service
@@ -24,6 +26,7 @@ public class EquipmentService {
 
     private final EquipmentRepository equipmentRepository;
     private final UserRepository userRepository;
+    private final FollowService followService;
 
     public Page<EquipmentResponse> getAllEquipment(String region, String district, EquipmentCategory category,
                                                     String query, Pageable pageable) {
@@ -62,12 +65,18 @@ public class EquipmentService {
                 .build();
 
         Equipment saved = equipmentRepository.save(equipment);
+
+        followService.notifyFollowers(owner.getId(),
+                owner.getFullName() + " listed a new " + saved.getName() + " - GHS " + saved.getDailyRate() + "/day",
+                NotificationType.NEW_EQUIPMENT);
+
         return EquipmentMapper.toResponse(saved);
     }
 
     public EquipmentResponse updateEquipment(String ownerEmail, Long id, UpdateEquipmentRequest request) {
         Equipment equipment = findEquipmentOrThrow(id);
         requireOwnership(equipment, ownerEmail);
+        BigDecimal previousRate = equipment.getDailyRate();
 
         if (request.getName() != null) {
             equipment.setName(request.getName());
@@ -95,6 +104,14 @@ public class EquipmentService {
         }
 
         Equipment saved = equipmentRepository.save(equipment);
+
+        if (request.getDailyRate() != null && previousRate.compareTo(saved.getDailyRate()) != 0) {
+            User owner = saved.getOwner();
+            followService.notifyFollowers(owner.getId(),
+                    owner.getFullName() + " updated " + saved.getName() + " price to GHS " + saved.getDailyRate() + "/day",
+                    NotificationType.PRICE_CHANGE);
+        }
+
         return EquipmentMapper.toResponse(saved);
     }
 
