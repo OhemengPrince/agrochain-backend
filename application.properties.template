@@ -1,11 +1,15 @@
+# Copy this file to src/main/resources/application.properties and fill in
+# every value marked YOUR_*. That file is gitignored so real credentials
+# never get committed.
+
 spring.application.name=agrochain-backend
 server.port=8080
 server.servlet.context-path=/api
 
-# Database
+# Database — password should match your local Postgres instance
 spring.datasource.url=jdbc:postgresql://localhost:5432/agrochain_db
 spring.datasource.username=postgres
-spring.datasource.password=YOUR_POSTGRES_PASSWORD
+spring.datasource.password=YOUR_LOCAL_POSTGRES_PASSWORD
 spring.datasource.driver-class-name=org.postgresql.Driver
 
 # JPA
@@ -14,11 +18,11 @@ spring.jpa.show-sql=true
 spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
 spring.jpa.properties.hibernate.format_sql=true
 
-# JWT
-jwt.secret=YOUR_JWT_SECRET_KEY
-jwt.expiration=86400000
+# JWT — any long random string works for local dev, e.g. `openssl rand -base64 48`
+jwt.secret=YOUR_JWT_SIGNING_SECRET
+jwt.expiration=604800000
 
-# Mail (OTP)
+# Mail — Brevo (Sendinblue) SMTP relay credentials, from the Brevo dashboard under SMTP & API
 spring.mail.host=smtp-relay.brevo.com
 spring.mail.port=587
 spring.mail.username=YOUR_BREVO_SMTP_LOGIN
@@ -26,7 +30,7 @@ spring.mail.password=YOUR_BREVO_SMTP_KEY
 spring.mail.properties.mail.smtp.auth=true
 spring.mail.properties.mail.smtp.starttls.enable=true
 
-# Paystack
+# Paystack — test keys from the Paystack dashboard under Settings > API Keys & Webhooks
 paystack.secret.key=YOUR_PAYSTACK_TEST_SECRET_KEY
 paystack.public.key=YOUR_PAYSTACK_TEST_PUBLIC_KEY
 
