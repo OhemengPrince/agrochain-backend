@@ -27,6 +27,7 @@ import org.springframework.web.client.RestTemplate;
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.util.HashMap;
@@ -49,6 +50,7 @@ public class PaymentService {
     private final MarketplaceListingRepository marketplaceListingRepository;
     private final RestTemplate restTemplate;
     private final ObjectMapper objectMapper;
+    private final EarningsService earningsService;
 
     @Value("${paystack.secret.key}")
     private String paystackSecretKey;
@@ -186,12 +188,34 @@ public class PaymentService {
         });
     }
 
+    // AgroChain commission: buyer pays listed price + 5%, seller's pending
+    // earning is credited on the listed price (EarningsService nets it down to
+    // 90% internally), and released to available_balance later — currently at
+    // BookingService.completeBooking(), not here — see that method for why.
+    private static final BigDecimal BUYER_FEE_RATE = new BigDecimal("0.05");
+
     private void applySuccessToBooking(Payment payment) {
-        if (payment.getBooking() != null) {
-            Booking booking = payment.getBooking();
-            booking.setPaymentStatus(PaymentStatus.PAID);
-            bookingRepository.save(booking);
+        if (payment.getBooking() == null) {
+            return;
         }
+        Booking booking = payment.getBooking();
+        booking.setPaymentStatus(PaymentStatus.PAID);
+        bookingRepository.save(booking);
+
+        BigDecimal baseAmount = booking.getTotalCost();
+        String reference = payment.getPaystackReference();
+
+        earningsService.addPendingEarning(booking.getEquipment().getOwner().getId(), baseAmount,
+                "Rental income for " + booking.getEquipment().getName(), reference + "-INCOME",
+                booking.getFarmer().getFullName(), booking.getId());
+
+        BigDecimal buyerFee = baseAmount.multiply(BUYER_FEE_RATE).setScale(2, RoundingMode.HALF_UP);
+        BigDecimal buyerTotal = baseAmount.add(buyerFee);
+        earningsService.recordTransaction(booking.getFarmer().getId(), TransactionType.EQUIPMENT_RENTAL_PAYMENT,
+                buyerTotal, buyerFee, buyerTotal, EarningsTransactionStatus.COMPLETED,
+                "Payment for " + booking.getEquipment().getName(), reference + "-PAYMENT",
+                booking.getEquipment().getOwner().getFullName(), booking.getId(),
+                "MOMO", payment.getMomoNumber(), null);
     }
 
     private boolean isValidSignature(String signature, String rawPayload) {

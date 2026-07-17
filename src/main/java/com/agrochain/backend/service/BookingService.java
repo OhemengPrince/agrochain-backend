@@ -9,14 +9,17 @@ import com.agrochain.backend.exception.UnauthorizedException;
 import com.agrochain.backend.model.*;
 import com.agrochain.backend.repository.BookingRepository;
 import com.agrochain.backend.repository.EquipmentRepository;
+import com.agrochain.backend.repository.PaymentRepository;
 import com.agrochain.backend.repository.ReviewRepository;
 import com.agrochain.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.time.temporal.ChronoUnit;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
@@ -28,6 +31,10 @@ public class BookingService {
     private final ReviewRepository reviewRepository;
     private final NotificationService notificationService;
     private final FollowService followService;
+    private final PaymentRepository paymentRepository;
+    private final EarningsService earningsService;
+
+    private static final BigDecimal BUYER_FEE_RATE = new BigDecimal("0.05");
 
     public BookingResponse createBooking(String farmerEmail, CreateBookingRequest request) {
         User farmer = getUserOrThrow(farmerEmail);
@@ -132,8 +139,35 @@ public class BookingService {
             throw new BadRequestException("This booking can no longer be cancelled");
         }
 
+        boolean wasPaid = booking.getPaymentStatus() == PaymentStatus.PAID;
         booking.setStatus(BookingStatus.CANCELLED);
+        if (wasPaid) {
+            booking.setPaymentStatus(PaymentStatus.REFUNDED);
+        }
         Booking saved = bookingRepository.save(booking);
+
+        // Refund is ledger-only here (a Transaction row recording what's owed
+        // back to the buyer) — it does not call Paystack's refund API to
+        // actually move money back to their mobile money account. That's a
+        // separate integration this task didn't ask for.
+        if (wasPaid) {
+            findSuccessfulPayment(booking).ifPresent(payment -> {
+                String reference = payment.getPaystackReference();
+                earningsService.reverseEarning(reference + "-INCOME");
+
+                BigDecimal baseAmount = booking.getTotalCost();
+                BigDecimal buyerFee = baseAmount.multiply(BUYER_FEE_RATE).setScale(2, RoundingMode.HALF_UP);
+                BigDecimal buyerTotal = baseAmount.add(buyerFee);
+                BigDecimal cancellationFee = buyerTotal.multiply(new BigDecimal("0.05")).setScale(2, RoundingMode.HALF_UP);
+                BigDecimal refundAmount = buyerTotal.subtract(cancellationFee);
+
+                earningsService.recordTransaction(booking.getFarmer().getId(), TransactionType.REFUND,
+                        buyerTotal, cancellationFee, refundAmount, EarningsTransactionStatus.COMPLETED,
+                        "Refund for cancelled booking of " + booking.getEquipment().getName(),
+                        reference + "-REFUND", booking.getEquipment().getOwner().getFullName(),
+                        booking.getId(), null, null, null);
+            });
+        }
 
         notificationService.createNotification(
                 booking.getFarmer().getId(),
@@ -149,6 +183,11 @@ public class BookingService {
         return BookingMapper.toResponse(saved);
     }
 
+    // This is where the equipment owner's payout actually releases from
+    // pending_balance to available_balance — not confirmBooking(), which only
+    // means the owner accepted the request before the rental period even
+    // happened. Releasing funds there would pay the owner before delivering
+    // anything; completeBooking() only fires after the rental is done.
     public BookingResponse completeBooking(String ownerEmail, Long bookingId) {
         Booking booking = findBookingOrThrow(bookingId);
 
@@ -162,6 +201,9 @@ public class BookingService {
         booking.setStatus(BookingStatus.COMPLETED);
         Booking saved = bookingRepository.save(booking);
 
+        findSuccessfulPayment(booking).ifPresent(payment ->
+                earningsService.confirmEarning(payment.getPaystackReference() + "-INCOME"));
+
         notificationService.createNotification(
                 booking.getFarmer().getId(),
                 "Booking Completed",
@@ -169,6 +211,12 @@ public class BookingService {
                 NotificationType.BOOKING);
 
         return BookingMapper.toResponse(saved);
+    }
+
+    private Optional<Payment> findSuccessfulPayment(Booking booking) {
+        return paymentRepository.findByBooking(booking).stream()
+                .filter(p -> p.getStatus() == TransactionStatus.SUCCESS)
+                .findFirst();
     }
 
     public void submitReview(String userEmail, ReviewRequest request) {

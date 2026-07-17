@@ -1,0 +1,12 @@
+package com.agrochain.backend.model;
+
+public enum TransactionType {
+    EQUIPMENT_RENTAL_INCOME,
+    MARKETPLACE_SALE_INCOME,
+    PRODUCE_SALE_INCOME,
+    EQUIPMENT_RENTAL_PAYMENT,
+    MARKETPLACE_PURCHASE,
+    PRODUCE_PURCHASE,
+    WITHDRAWAL,
+    REFUND
+}
