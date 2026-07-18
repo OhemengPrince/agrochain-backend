@@ -37,6 +37,7 @@ public class ProduceBatchService {
                 .cropName(request.getCropName())
                 .variety(request.getVariety())
                 .quantityKg(request.getQuantityKg())
+                .pricePerKg(request.getPricePerKg())
                 .region(request.getRegion())
                 .district(request.getDistrict())
                 .plantedDate(request.getPlantedDate())

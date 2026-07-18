@@ -28,6 +28,7 @@ public final class ProduceBatchMapper {
                 .cropName(batch.getCropName())
                 .variety(batch.getVariety())
                 .quantityKg(batch.getQuantityKg())
+                .pricePerKg(batch.getPricePerKg())
                 .region(batch.getRegion())
                 .district(batch.getDistrict())
                 .plantedDate(batch.getPlantedDate())

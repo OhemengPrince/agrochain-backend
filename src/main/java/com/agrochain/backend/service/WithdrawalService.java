@@ -90,7 +90,7 @@ public class WithdrawalService {
             earningsService.recordTransaction(user.getId(), TransactionType.WITHDRAWAL, request.getAmount(),
                     BigDecimal.ZERO, request.getAmount(), EarningsTransactionStatus.PENDING,
                     "Withdrawal via " + request.getMethod(), "WD-" + saved.getId(), user.getFullName(),
-                    null, request.getMethod().name(), paymentNumber, request.getBankName());
+                    null, null, request.getMethod().name(), paymentNumber, request.getBankName());
 
             return toDto(saved);
         } catch (RestClientException e) {

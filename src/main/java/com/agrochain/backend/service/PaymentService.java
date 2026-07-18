@@ -205,16 +205,17 @@ public class PaymentService {
         BigDecimal baseAmount = booking.getTotalCost();
         String reference = payment.getPaystackReference();
 
-        earningsService.addPendingEarning(booking.getEquipment().getOwner().getId(), baseAmount,
+        earningsService.addPendingEarning(booking.getEquipment().getOwner().getId(),
+                TransactionType.EQUIPMENT_RENTAL_INCOME, baseAmount,
                 "Rental income for " + booking.getEquipment().getName(), reference + "-INCOME",
-                booking.getFarmer().getFullName(), booking.getId());
+                booking.getFarmer().getFullName(), booking.getId(), null);
 
         BigDecimal buyerFee = baseAmount.multiply(BUYER_FEE_RATE).setScale(2, RoundingMode.HALF_UP);
         BigDecimal buyerTotal = baseAmount.add(buyerFee);
         earningsService.recordTransaction(booking.getFarmer().getId(), TransactionType.EQUIPMENT_RENTAL_PAYMENT,
                 buyerTotal, buyerFee, buyerTotal, EarningsTransactionStatus.COMPLETED,
                 "Payment for " + booking.getEquipment().getName(), reference + "-PAYMENT",
-                booking.getEquipment().getOwner().getFullName(), booking.getId(),
+                booking.getEquipment().getOwner().getFullName(), booking.getId(), null,
                 "MOMO", payment.getMomoNumber(), null);
     }
 

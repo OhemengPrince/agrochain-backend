@@ -165,7 +165,7 @@ public class BookingService {
                         buyerTotal, cancellationFee, refundAmount, EarningsTransactionStatus.COMPLETED,
                         "Refund for cancelled booking of " + booking.getEquipment().getName(),
                         reference + "-REFUND", booking.getEquipment().getOwner().getFullName(),
-                        booking.getId(), null, null, null);
+                        booking.getId(), null, null, null, null);
             });
         }
 

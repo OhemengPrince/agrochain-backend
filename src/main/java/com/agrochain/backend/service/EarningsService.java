@@ -61,8 +61,9 @@ public class EarningsService {
     // the seller's pending_balance with their net share and records a PENDING
     // ledger row keyed by reference, to be released later via confirmEarning.
     @Transactional
-    public void addPendingEarning(Long userId, BigDecimal grossAmount, String description, String reference,
-                                   String counterpartyName, Long relatedBookingId) {
+    public void addPendingEarning(Long userId, TransactionType type, BigDecimal grossAmount, String description,
+                                   String reference, String counterpartyName, Long relatedBookingId,
+                                   Long relatedListingId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
@@ -75,7 +76,7 @@ public class EarningsService {
 
         Transaction transaction = Transaction.builder()
                 .user(user)
-                .type(TransactionType.EQUIPMENT_RENTAL_INCOME)
+                .type(type)
                 .amount(grossAmount)
                 .agrochainFee(fee)
                 .netAmount(netAmount)
@@ -84,6 +85,7 @@ public class EarningsService {
                 .reference(reference)
                 .counterpartyName(counterpartyName)
                 .relatedBookingId(relatedBookingId)
+                .relatedListingId(relatedListingId)
                 .build();
         transactionRepository.save(transaction);
     }
@@ -148,8 +150,8 @@ public class EarningsService {
     public void recordTransaction(Long userId, TransactionType type, BigDecimal amount, BigDecimal fee,
                                    BigDecimal netAmount, EarningsTransactionStatus status,
                                    String description, String reference, String counterpartyName,
-                                   Long relatedBookingId, String paymentMethod, String paymentNumber,
-                                   String bankName) {
+                                   Long relatedBookingId, Long relatedListingId, String paymentMethod,
+                                   String paymentNumber, String bankName) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
 
@@ -164,6 +166,7 @@ public class EarningsService {
                 .reference(reference)
                 .counterpartyName(counterpartyName)
                 .relatedBookingId(relatedBookingId)
+                .relatedListingId(relatedListingId)
                 .paymentMethod(paymentMethod)
                 .paymentNumber(paymentNumber)
                 .bankName(bankName)

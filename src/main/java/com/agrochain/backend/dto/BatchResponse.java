@@ -21,6 +21,7 @@ public class BatchResponse {
     private String cropName;
     private String variety;
     private BigDecimal quantityKg;
+    private BigDecimal pricePerKg;
     private String region;
     private String district;
     private LocalDate plantedDate;

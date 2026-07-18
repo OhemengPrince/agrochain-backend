@@ -34,6 +34,9 @@ public class ProduceBatch {
     @Column(nullable = false, precision = 12, scale = 2)
     private BigDecimal quantityKg;
 
+    @Column(precision = 12, scale = 2)
+    private BigDecimal pricePerKg;
+
     @Column(nullable = false)
     private String region;
 
