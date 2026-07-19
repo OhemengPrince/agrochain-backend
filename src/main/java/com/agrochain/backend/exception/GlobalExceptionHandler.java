@@ -1,5 +1,6 @@
 package com.agrochain.backend.exception;
 
+import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -75,17 +76,22 @@ public class GlobalExceptionHandler {
         Map<String, String> fieldErrors = new HashMap<>();
         String message = "Request body is missing or contains invalid field types or enum values.";
 
-        if (ex.getCause() instanceof InvalidFormatException ife) {
-            String fieldName = ife.getPath().isEmpty() ? "unknown"
-                    : ife.getPath().get(ife.getPath().size() - 1).getFieldName();
-            String rejectedValue = String.valueOf(ife.getValue());
-            String validValues = ife.getTargetType() != null && ife.getTargetType().isEnum()
-                    ? Arrays.stream(ife.getTargetType().getEnumConstants())
-                            .map(Object::toString).collect(Collectors.joining(", "))
-                    : "see docs";
-            fieldErrors.put(fieldName, "Invalid value '" + rejectedValue + "'. Valid values: " + validValues);
-            message = "Invalid value for field '" + fieldName + "': '" + rejectedValue
-                    + "'. Valid values are: " + validValues;
+        if (ex.getCause() instanceof JsonMappingException jme) {
+            String fieldName = jme.getPath().isEmpty() ? "unknown"
+                    : jme.getPath().get(jme.getPath().size() - 1).getFieldName();
+            if (jme instanceof InvalidFormatException ife
+                    && ife.getTargetType() != null && ife.getTargetType().isEnum()) {
+                String rejectedValue = String.valueOf(ife.getValue());
+                String validValues = Arrays.stream(ife.getTargetType().getEnumConstants())
+                        .map(Object::toString).collect(Collectors.joining(", "));
+                fieldErrors.put(fieldName, "Invalid value '" + rejectedValue + "'. Valid values: " + validValues);
+                message = "Invalid value for field '" + fieldName + "': '" + rejectedValue
+                        + "'. Valid values are: " + validValues;
+            } else {
+                String detail = jme.getOriginalMessage() != null ? jme.getOriginalMessage() : jme.getMessage();
+                fieldErrors.put(fieldName, "Invalid value or type: " + detail);
+                message = "Invalid value or type for field '" + fieldName + "': " + detail;
+            }
         }
 
         ErrorResponse errorResponse = ErrorResponse.builder()

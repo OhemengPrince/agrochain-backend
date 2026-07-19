@@ -17,6 +17,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -58,7 +59,9 @@ public class MarketplaceService {
                 .priceType(request.getPriceType())
                 .price(request.getPrice())
                 .quantity(request.getQuantity())
-                .photoUrls(request.getPhotoUrls())
+                .photoUrls(request.getPhotoUrls() == null || request.getPhotoUrls().isEmpty()
+                        ? null
+                        : String.join(",", request.getPhotoUrls()))
                 .region(request.getRegion())
                 .district(request.getDistrict())
                 .contactPreference(request.getContactPreference())

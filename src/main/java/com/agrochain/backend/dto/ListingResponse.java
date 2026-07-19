@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Builder
@@ -25,7 +26,7 @@ public class ListingResponse {
     private PriceType priceType;
     private BigDecimal price;
     private String quantity;
-    private String photoUrls;
+    private List<String> photoUrls;
     private String region;
     private String district;
     private ContactPreference contactPreference;

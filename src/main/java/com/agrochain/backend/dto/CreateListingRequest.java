@@ -12,6 +12,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
+import java.util.List;
 
 @Data
 @Builder
@@ -36,7 +37,8 @@ public class CreateListingRequest {
 
     private String quantity;
 
-    private String photoUrls;
+    // Frontend sends a JSON array; stored as comma-separated string in the DB column.
+    private List<String> photoUrls;
 
     @NotBlank(message = "Region is required")
     private String region;

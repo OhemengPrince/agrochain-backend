@@ -7,6 +7,7 @@ import com.agrochain.backend.model.ListingCategory;
 import com.agrochain.backend.service.MarketplaceService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
@@ -16,6 +17,7 @@ import java.util.List;
 @RestController
 @RequestMapping("/marketplace")
 @RequiredArgsConstructor
+@Slf4j
 public class MarketplaceController {
 
     private final MarketplaceService marketplaceService;
@@ -40,6 +42,11 @@ public class MarketplaceController {
     @PostMapping("/listings")
     public ResponseEntity<ListingResponse> createListing(Authentication authentication,
                                                           @Valid @RequestBody CreateListingRequest request) {
+        log.info("Received listing request: {}", request);
+        log.info("Category: {}", request.getCategory());
+        log.info("PriceType: {}", request.getPriceType());
+        log.info("ContactPreference: {}", request.getContactPreference());
+        log.info("PhotoUrls: {}", request.getPhotoUrls());
         return ResponseEntity.ok(marketplaceService.createListing(authentication.getName(), request));
     }
 

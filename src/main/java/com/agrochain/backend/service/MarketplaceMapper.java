@@ -3,6 +3,10 @@ package com.agrochain.backend.service;
 import com.agrochain.backend.dto.ListingResponse;
 import com.agrochain.backend.model.MarketplaceListing;
 
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
+
 public final class MarketplaceMapper {
 
     private MarketplaceMapper() {
@@ -17,7 +21,7 @@ public final class MarketplaceMapper {
                 .priceType(listing.getPriceType())
                 .price(listing.getPrice())
                 .quantity(listing.getQuantity())
-                .photoUrls(listing.getPhotoUrls())
+                .photoUrls(parsePhotoUrls(listing.getPhotoUrls()))
                 .region(listing.getRegion())
                 .district(listing.getDistrict())
                 .contactPreference(listing.getContactPreference())
@@ -30,5 +34,12 @@ public final class MarketplaceMapper {
                 .createdAt(listing.getCreatedAt())
                 .updatedAt(listing.getUpdatedAt())
                 .build();
+    }
+
+    private static List<String> parsePhotoUrls(String raw) {
+        if (raw == null || raw.isBlank()) {
+            return Collections.emptyList();
+        }
+        return Arrays.asList(raw.split(","));
     }
 }
