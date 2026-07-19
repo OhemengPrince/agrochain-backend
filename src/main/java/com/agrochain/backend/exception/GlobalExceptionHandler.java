@@ -1,5 +1,6 @@
 package com.agrochain.backend.exception;
 
+import com.fasterxml.jackson.databind.exc.InvalidFormatException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
@@ -11,8 +12,10 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.LocalDateTime;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @RestControllerAdvice
 @Slf4j
@@ -68,8 +71,30 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(HttpMessageNotReadableException.class)
     public ResponseEntity<ErrorResponse> handleMalformedJson(HttpMessageNotReadableException ex) {
         log.warn("Malformed request body: {}", ex.getMessage());
-        return buildResponse("Request body is missing or contains invalid values. Please check the field types and enum values (e.g. role) and try again.",
-                HttpStatus.BAD_REQUEST);
+
+        Map<String, String> fieldErrors = new HashMap<>();
+        String message = "Request body is missing or contains invalid field types or enum values.";
+
+        if (ex.getCause() instanceof InvalidFormatException ife) {
+            String fieldName = ife.getPath().isEmpty() ? "unknown"
+                    : ife.getPath().get(ife.getPath().size() - 1).getFieldName();
+            String rejectedValue = String.valueOf(ife.getValue());
+            String validValues = ife.getTargetType() != null && ife.getTargetType().isEnum()
+                    ? Arrays.stream(ife.getTargetType().getEnumConstants())
+                            .map(Object::toString).collect(Collectors.joining(", "))
+                    : "see docs";
+            fieldErrors.put(fieldName, "Invalid value '" + rejectedValue + "'. Valid values: " + validValues);
+            message = "Invalid value for field '" + fieldName + "': '" + rejectedValue
+                    + "'. Valid values are: " + validValues;
+        }
+
+        ErrorResponse errorResponse = ErrorResponse.builder()
+                .message(message)
+                .status(HttpStatus.BAD_REQUEST.value())
+                .timestamp(LocalDateTime.now())
+                .fieldErrors(fieldErrors)
+                .build();
+        return new ResponseEntity<>(errorResponse, HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler(Exception.class)
