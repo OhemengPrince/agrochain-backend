@@ -38,9 +38,6 @@ public class BookingService {
 
     public BookingResponse createBooking(String farmerEmail, CreateBookingRequest request) {
         User farmer = getUserOrThrow(farmerEmail);
-        if (farmer.getRole() != Role.FARMER) {
-            throw new UnauthorizedException("Only farmers can book equipment");
-        }
 
         Equipment equipment = equipmentRepository.findById(request.getEquipmentId())
                 .orElseThrow(() -> new ResourceNotFoundException("Equipment not found"));
