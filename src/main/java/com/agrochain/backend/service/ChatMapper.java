@@ -27,6 +27,9 @@ public final class ChatMapper {
                 .senderId(message.getSender().getId())
                 .senderName(message.getSender().getFullName())
                 .content(message.getContent())
+                .audioUrl(message.getAudioUrl())
+                .audioDuration(message.getAudioDuration())
+                .messageType(message.getMessageType())
                 .isRead(message.isRead())
                 .createdAt(message.getCreatedAt())
                 .build();
@@ -38,6 +41,9 @@ public final class ChatMapper {
                 .senderId(message.getSender().getId())
                 .senderName(message.getSender().getFullName())
                 .content(message.getContent())
+                .audioUrl(message.getAudioUrl())
+                .audioDuration(message.getAudioDuration())
+                .messageType(message.getMessageType())
                 .createdAt(message.getCreatedAt())
                 .build();
     }

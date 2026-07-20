@@ -31,6 +31,16 @@ public class ChatMessage {
     @Column(nullable = false, length = 4000)
     private String content;
 
+    @Column(name = "audio_url")
+    private String audioUrl;
+
+    @Column(name = "audio_duration")
+    private Integer audioDuration;
+
+    @Builder.Default
+    @Column(name = "message_type")
+    private String messageType = "TEXT";
+
     @Builder.Default
     @Column(nullable = false)
     private boolean isRead = false;

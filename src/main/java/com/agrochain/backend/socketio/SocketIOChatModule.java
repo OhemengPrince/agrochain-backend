@@ -51,7 +51,8 @@ public class SocketIOChatModule {
             log.info("[SocketIO] send_message: user={}, roomId={}, contentPreview={}",
                     email, data.getRoomId(), preview(data.getContent()));
             try {
-                ChatMessageResponse saved = chatService.saveMessage(data.getRoomId(), email, data.getContent());
+                ChatMessageResponse saved = chatService.saveMessage(data.getRoomId(), email, data.getContent(),
+                        data.getAudioUrl(), data.getAudioDuration(), data.getType());
                 server.getRoomOperations(roomChannel(data.getRoomId())).sendEvent("new_message", saved);
                 log.info("[SocketIO] message {} broadcast to {}", saved.getId(), roomChannel(data.getRoomId()));
             } catch (Exception e) {

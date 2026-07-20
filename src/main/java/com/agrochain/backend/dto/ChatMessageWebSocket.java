@@ -17,5 +17,8 @@ public class ChatMessageWebSocket {
     private Long senderId;
     private String senderName;
     private String content;
+    private String audioUrl;
+    private Integer audioDuration;
+    private String messageType;
     private LocalDateTime createdAt;
 }

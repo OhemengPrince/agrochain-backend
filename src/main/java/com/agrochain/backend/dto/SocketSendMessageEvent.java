@@ -11,4 +11,7 @@ public class SocketSendMessageEvent {
 
     private Long roomId;
     private String content;
+    private String audioUrl;
+    private Integer audioDuration;
+    private String type;
 }

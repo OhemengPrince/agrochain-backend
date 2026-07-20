@@ -63,6 +63,12 @@ public class ChatService {
 
     @Transactional
     public ChatMessageResponse saveMessage(Long roomId, String senderEmail, String content) {
+        return saveMessage(roomId, senderEmail, content, null, null, null);
+    }
+
+    @Transactional
+    public ChatMessageResponse saveMessage(Long roomId, String senderEmail, String content,
+                                            String audioUrl, Integer audioDuration, String messageType) {
         ChatRoom room = findRoomOrThrow(roomId);
         User sender = getUserOrThrow(senderEmail);
         requireParticipant(room, senderEmail);
@@ -71,6 +77,9 @@ public class ChatService {
                 .room(room)
                 .sender(sender)
                 .content(content)
+                .audioUrl(audioUrl)
+                .audioDuration(audioDuration)
+                .messageType(messageType != null ? messageType : "TEXT")
                 .isRead(false)
                 .build();
         ChatMessage saved = chatMessageRepository.save(message);
