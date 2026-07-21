@@ -1,0 +1,41 @@
+spring.application.name=agrochain-backend
+server.port=${PORT:8080}
+server.servlet.context-path=/api
+
+# Database (Render/Neon: set SPRING_DATASOURCE_* as env vars in the service config)
+spring.datasource.url=${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/agrochain_db}
+spring.datasource.username=${SPRING_DATASOURCE_USERNAME:postgres}
+spring.datasource.password=${SPRING_DATASOURCE_PASSWORD:changeme}
+spring.datasource.driver-class-name=org.postgresql.Driver
+
+# JPA
+spring.jpa.hibernate.ddl-auto=update
+spring.jpa.show-sql=true
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.PostgreSQLDialect
+spring.jpa.properties.hibernate.format_sql=true
+
+# JWT
+jwt.secret=${JWT_SECRET:changeme}
+jwt.expiration=604800000
+
+# Mail
+spring.mail.host=${SPRING_MAIL_HOST:smtp-relay.brevo.com}
+spring.mail.port=${SPRING_MAIL_PORT:587}
+spring.mail.username=${SPRING_MAIL_USERNAME:changeme}
+spring.mail.password=${SPRING_MAIL_PASSWORD:changeme}
+spring.mail.properties.mail.smtp.auth=true
+spring.mail.properties.mail.smtp.starttls.enable=true
+
+# Paystack
+paystack.secret.key=${PAYSTACK_SECRET_KEY:changeme}
+paystack.public.key=${PAYSTACK_PUBLIC_KEY:changeme}
+
+# Actuator
+management.endpoints.web.exposure.include=health
+management.endpoint.health.show-details=never
+management.health.mail.enabled=false
+
+# File uploads
+spring.servlet.multipart.max-file-size=5MB
+spring.servlet.multipart.max-request-size=6MB
+file.upload-dir=./uploads
