@@ -5,6 +5,7 @@ import com.agrochain.backend.dto.MarketplacePurchaseResponse;
 import com.agrochain.backend.dto.PaystackInitResponse;
 import com.agrochain.backend.dto.PaystackVerifyResponse;
 import com.agrochain.backend.dto.PurchaseInitiationResponse;
+import com.agrochain.backend.dto.PurchaseReviewRequest;
 import com.agrochain.backend.exception.BadRequestException;
 import com.agrochain.backend.exception.ResourceNotFoundException;
 import com.agrochain.backend.exception.UnauthorizedException;
@@ -15,10 +16,12 @@ import com.agrochain.backend.model.MarketplacePurchase;
 import com.agrochain.backend.model.MomoNetwork;
 import com.agrochain.backend.model.NotificationType;
 import com.agrochain.backend.model.PurchaseStatus;
+import com.agrochain.backend.model.Review;
 import com.agrochain.backend.model.TransactionType;
 import com.agrochain.backend.model.User;
 import com.agrochain.backend.repository.MarketplaceListingRepository;
 import com.agrochain.backend.repository.MarketplacePurchaseRepository;
+import com.agrochain.backend.repository.ReviewRepository;
 import com.agrochain.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -69,6 +72,7 @@ public class MarketplacePurchaseService {
     private final MarketplacePurchaseRepository purchaseRepository;
     private final MarketplaceListingRepository listingRepository;
     private final UserRepository userRepository;
+    private final ReviewRepository reviewRepository;
     private final EarningsService earningsService;
     private final NotificationService notificationService;
     private final RestTemplate restTemplate;
@@ -236,6 +240,28 @@ public class MarketplacePurchaseService {
                 "Buyer cancelled order for " + purchase.getListing().getName(), NotificationType.ORDER_CANCELLED);
 
         return toResponse(saved);
+    }
+
+    public void submitReview(String buyerEmail, Long purchaseId, PurchaseReviewRequest request) {
+        MarketplacePurchase purchase = findOrThrow(purchaseId);
+        requireBuyer(purchase, buyerEmail);
+
+        if (purchase.getStatus() != PurchaseStatus.COMPLETED) {
+            throw new BadRequestException("Only completed orders can be reviewed");
+        }
+        if (reviewRepository.findByMarketplacePurchase(purchase).isPresent()) {
+            throw new BadRequestException("This order has already been reviewed");
+        }
+
+        Review review = Review.builder()
+                .marketplacePurchase(purchase)
+                .reviewer(purchase.getBuyer())
+                .reviewee(purchase.getListing().getSeller())
+                .rating(request.getRating())
+                .comment(request.getComment())
+                .build();
+
+        reviewRepository.save(review);
     }
 
     // Called hourly by AutoConfirmScheduler — releases payment for any

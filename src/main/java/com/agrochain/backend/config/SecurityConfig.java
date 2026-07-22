@@ -62,6 +62,8 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/users/{id}/followers").permitAll()
                         .requestMatchers(HttpMethod.GET, "/users/{id}/following").permitAll()
                         .requestMatchers(HttpMethod.GET, "/users/{id}/follow-counts").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/users/{id}/reviews").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/users/{id}/average-rating").permitAll()
                         // Must come before the /users/{id} permitAll rule below — that
                         // pattern matches any single path segment, including "me", and
                         // Spring Security uses first-match-wins ordering.

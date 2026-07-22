@@ -1,6 +1,8 @@
 package com.agrochain.backend.controller;
 
+import com.agrochain.backend.dto.AverageRatingResponse;
 import com.agrochain.backend.dto.PublicUserDto;
+import com.agrochain.backend.dto.ReviewResponse;
 import com.agrochain.backend.dto.TopRatedUserDto;
 import com.agrochain.backend.dto.UpdatePhotoUrlRequest;
 import com.agrochain.backend.dto.UpdateProfileRequest;
@@ -69,6 +71,19 @@ public class UserController {
             Authentication authentication,
             @RequestParam(defaultValue = "10") int limit) {
         return ResponseEntity.ok(userService.getRecentUsers(limit, resolveViewerId(authentication)));
+    }
+
+    // Public — reviews received by a user. Mapped before "/{id}" for file
+    // consistency; see the /recent comment above on why declaration order
+    // doesn't actually matter to Spring MVC here.
+    @GetMapping("/{id}/reviews")
+    public ResponseEntity<List<ReviewResponse>> getUserReviews(@PathVariable Long id) {
+        return ResponseEntity.ok(userService.getUserReviews(id));
+    }
+
+    @GetMapping("/{id}/average-rating")
+    public ResponseEntity<AverageRatingResponse> getAverageRating(@PathVariable Long id) {
+        return ResponseEntity.ok(userService.getAverageRating(id));
     }
 
     // Public — only ever returns PublicUserDto's narrow, safe field set.

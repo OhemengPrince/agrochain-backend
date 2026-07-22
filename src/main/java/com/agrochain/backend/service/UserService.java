@@ -1,6 +1,8 @@
 package com.agrochain.backend.service;
 
+import com.agrochain.backend.dto.AverageRatingResponse;
 import com.agrochain.backend.dto.PublicUserDto;
+import com.agrochain.backend.dto.ReviewResponse;
 import com.agrochain.backend.dto.TopRatedUserDto;
 import com.agrochain.backend.dto.UpdateProfileRequest;
 import com.agrochain.backend.dto.UserDto;
@@ -111,7 +113,36 @@ public class UserService {
         Boolean isFollowing = viewerId == null ? null
                 : followRepository.existsByFollowerIdAndFollowingId(viewerId, user.getId());
 
-        return UserMapper.toPublicUserDto(user, averageRating, followerCount, followingCount, isFollowing);
+        return UserMapper.toPublicUserDto(user, averageRating, reviews.size(), followerCount, followingCount, isFollowing);
+    }
+
+    public List<ReviewResponse> getUserReviews(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        return reviewRepository.findByRevieweeOrderByCreatedAtDesc(user).stream()
+                .map(review -> ReviewResponse.builder()
+                        .id(review.getId())
+                        .reviewerName(review.getReviewer().getFullName())
+                        .rating(review.getRating())
+                        .comment(review.getComment())
+                        .createdAt(review.getCreatedAt())
+                        .build())
+                .toList();
+    }
+
+    public AverageRatingResponse getAverageRating(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        List<Review> reviews = reviewRepository.findByReviewee(user);
+        Double averageRating = reviews.isEmpty() ? null
+                : Math.round(reviews.stream().mapToInt(Review::getRating).average().orElse(0) * 10) / 10.0;
+
+        return AverageRatingResponse.builder()
+                .averageRating(averageRating)
+                .totalReviews(reviews.size())
+                .build();
     }
 
     // Public — same safe field set as getPublicProfile. Only verified users

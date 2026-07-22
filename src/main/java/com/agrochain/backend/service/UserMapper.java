@@ -23,7 +23,7 @@ public final class UserMapper {
                 .build();
     }
 
-    public static PublicUserDto toPublicUserDto(User user, Double averageRating,
+    public static PublicUserDto toPublicUserDto(User user, Double averageRating, long totalReviews,
                                                  long followerCount, long followingCount,
                                                  Boolean isFollowing) {
         return PublicUserDto.builder()
@@ -35,6 +35,7 @@ public final class UserMapper {
                 .profilePhotoUrl(user.getProfilePhotoUrl())
                 .isVerified(user.isVerified())
                 .averageRating(averageRating)
+                .totalReviews(totalReviews)
                 .followerCount(followerCount)
                 .followingCount(followingCount)
                 .isFollowing(isFollowing)

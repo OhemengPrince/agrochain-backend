@@ -3,6 +3,7 @@ package com.agrochain.backend.controller;
 import com.agrochain.backend.dto.InitiateMarketplacePurchaseRequest;
 import com.agrochain.backend.dto.MarketplacePurchaseResponse;
 import com.agrochain.backend.dto.PurchaseInitiationResponse;
+import com.agrochain.backend.dto.PurchaseReviewRequest;
 import com.agrochain.backend.service.MarketplacePurchaseService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -12,6 +13,8 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequestMapping("/marketplace")
@@ -44,6 +47,13 @@ public class MarketplacePurchaseController {
     @PostMapping("/purchases/{id}/cancel")
     public ResponseEntity<MarketplacePurchaseResponse> cancel(Authentication authentication, @PathVariable Long id) {
         return ResponseEntity.ok(purchaseService.cancelPurchase(authentication.getName(), id));
+    }
+
+    @PostMapping("/purchases/{id}/review")
+    public ResponseEntity<Map<String, String>> submitReview(Authentication authentication, @PathVariable Long id,
+            @Valid @RequestBody PurchaseReviewRequest request) {
+        purchaseService.submitReview(authentication.getName(), id, request);
+        return ResponseEntity.ok(Map.of("message", "Review submitted successfully."));
     }
 
     @GetMapping("/purchases/mine")
