@@ -42,7 +42,12 @@ import java.util.Map;
 @Slf4j
 public class SocketIOConfig {
 
-    private static final int PORT = 9092;
+    // Runs as its own Render web service, separate from the REST API's
+    // $PORT — netty-socketio owns its own Netty server socket and can't
+    // share a port with Spring Boot's embedded servlet container in the
+    // same process. SOCKETIO_PORT is that service's own $PORT on Render;
+    // 9092 remains the local-dev default.
+    private static final int PORT = Integer.parseInt(System.getenv().getOrDefault("SOCKETIO_PORT", "9092"));
 
     private final JwtService jwtService;
 
