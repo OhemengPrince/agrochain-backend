@@ -1,3 +1,4 @@
+# Build version 2 - async email fix
 FROM eclipse-temurin:21-jdk-alpine AS build
 WORKDIR /app
 COPY . .
