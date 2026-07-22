@@ -2,6 +2,7 @@
 FROM eclipse-temurin:21-jdk-alpine AS build
 WORKDIR /app
 COPY . .
+ARG CACHEBUST=2
 RUN cp src/main/resources/application.properties.template src/main/resources/application.properties
 RUN chmod +x mvnw && ./mvnw clean package -DskipTests
 
