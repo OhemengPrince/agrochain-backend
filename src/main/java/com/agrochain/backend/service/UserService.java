@@ -114,6 +114,15 @@ public class UserService {
         return UserMapper.toPublicUserDto(user, averageRating, followerCount, followingCount, isFollowing);
     }
 
+    // Public — same safe field set as getPublicProfile. Only verified users
+    // are eligible, matching getTopRatedUsers' visibility rule.
+    public List<PublicUserDto> getRecentUsers(int limit, Long viewerId) {
+        Pageable pageable = PageRequest.of(0, limit);
+        return userRepository.findByIsVerifiedTrueOrderByCreatedAtDesc(pageable).stream()
+                .map(user -> toPublicUserDto(user, viewerId))
+                .toList();
+    }
+
     public List<TopRatedUserDto> getTopRatedUsers(Role role, int limit) {
         Pageable pageable = PageRequest.of(0, limit);
         List<Object[]> rows = userRepository.findTopRatedUsers(role, pageable);

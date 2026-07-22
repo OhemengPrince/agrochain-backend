@@ -60,6 +60,17 @@ public class UserController {
         return ResponseEntity.ok(userService.getTopRatedUsers(role, limit));
     }
 
+    // Public — recently registered verified users. Must be mapped before
+    // "/{id}" below: Spring MVC picks the more specific literal pattern
+    // regardless of declaration order, but this keeps the file consistent
+    // with how /top-rated is already placed ahead of "/{id}".
+    @GetMapping("/recent")
+    public ResponseEntity<List<PublicUserDto>> getRecentUsers(
+            Authentication authentication,
+            @RequestParam(defaultValue = "10") int limit) {
+        return ResponseEntity.ok(userService.getRecentUsers(limit, resolveViewerId(authentication)));
+    }
+
     // Public — only ever returns PublicUserDto's narrow, safe field set.
     // Used by the mobile Top Rated carousel to enrich profiles without a token.
     @GetMapping("/{id}")

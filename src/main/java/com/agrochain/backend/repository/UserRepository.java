@@ -18,6 +18,8 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     Optional<User> findByPhoneNumber(String phoneNumber);
 
+    List<User> findByIsVerifiedTrueOrderByCreatedAtDesc(Pageable pageable);
+
     // Only reviewees with at least one review appear at all, since the query
     // is driven by an inner join against Review rather than a left join from User.
     @Query("SELECT u, AVG(r.rating), COUNT(r) FROM User u JOIN Review r ON r.reviewee = u " +
