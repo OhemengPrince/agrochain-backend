@@ -2,6 +2,7 @@ package com.agrochain.backend.controller;
 
 import com.agrochain.backend.dto.BookingResponse;
 import com.agrochain.backend.dto.CreateBookingRequest;
+import com.agrochain.backend.dto.PurchaseReviewRequest;
 import com.agrochain.backend.dto.ReviewRequest;
 import com.agrochain.backend.service.BookingService;
 import jakarta.validation.Valid;
@@ -55,6 +56,25 @@ public class BookingController {
     public ResponseEntity<Map<String, String>> submitReview(Authentication authentication,
                                                               @Valid @RequestBody ReviewRequest request) {
         bookingService.submitReview(authentication.getName(), request);
+        return ResponseEntity.ok(Map.of("message", "Review submitted successfully."));
+    }
+
+    // Path-based equivalent of POST /bookings/reviews (which takes bookingId
+    // in the body) — same bookingService.submitReview underneath, so both the
+    // farmer and the equipment owner can review each other after COMPLETED,
+    // exactly as /bookings/reviews already allows. Kept in this controller
+    // rather than a separate ReviewController to match how the marketplace/
+    // produce purchase review endpoints already live on their own resource's
+    // controller rather than a shared one.
+    @PostMapping("/{id}/review")
+    public ResponseEntity<Map<String, String>> reviewBooking(Authentication authentication, @PathVariable Long id,
+                                                               @Valid @RequestBody PurchaseReviewRequest request) {
+        ReviewRequest reviewRequest = ReviewRequest.builder()
+                .bookingId(id)
+                .rating(request.getRating())
+                .comment(request.getComment())
+                .build();
+        bookingService.submitReview(authentication.getName(), reviewRequest);
         return ResponseEntity.ok(Map.of("message", "Review submitted successfully."));
     }
 }
