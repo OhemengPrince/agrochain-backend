@@ -1,0 +1,6 @@
+.git
+target
+uploads
+.expo
+err.log
+src/main/resources/application.properties
