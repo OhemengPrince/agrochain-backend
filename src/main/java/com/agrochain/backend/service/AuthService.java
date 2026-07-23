@@ -10,21 +10,32 @@ import com.agrochain.backend.model.User;
 import com.agrochain.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestClientException;
+import org.springframework.web.client.RestTemplate;
+
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
 @Slf4j
 public class AuthService {
 
+    private static final String GOOGLE_TOKENINFO_URL = "https://oauth2.googleapis.com/tokeninfo";
+
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final OtpService otpService;
     private final EmailService emailService;
     private final JwtService jwtService;
+    private final RestTemplate restTemplate;
+
+    @Value("${google.oauth.client-id}")
+    private String googleClientId;
 
     @Transactional
     public void register(RegisterRequest request) {
@@ -119,6 +130,110 @@ public class AuthService {
                 .token(token)
                 .user(UserMapper.toDto(user))
                 .build();
+    }
+
+    // Existing account -> issue a token like a normal login (Google's
+    // verification is at least as strong as our own OTP flow, so an
+    // account that never finished email OTP verification is fine to trust
+    // here too). New email -> hand the verified profile fields back so the
+    // frontend can collect role/region/etc. and call googleRegister.
+    @Transactional
+    public GoogleLoginResponse googleLogin(GoogleLoginRequest request) {
+        GoogleTokenInfoResponse googleUser = verifyGoogleIdToken(request.getIdToken());
+
+        User user = userRepository.findByEmail(googleUser.getEmail()).orElse(null);
+        if (user == null) {
+            return GoogleLoginResponse.builder()
+                    .newUser(true)
+                    .email(googleUser.getEmail())
+                    .fullName(googleUser.getName())
+                    .profilePhotoUrl(googleUser.getPicture())
+                    .build();
+        }
+
+        if (!user.isVerified()) {
+            user.setVerified(true);
+        }
+        User saved = userRepository.save(user);
+
+        String token = jwtService.generateToken(saved);
+        return GoogleLoginResponse.builder()
+                .newUser(false)
+                .token(token)
+                .user(UserMapper.toDto(saved))
+                .build();
+    }
+
+    @Transactional
+    public AuthResponse googleRegister(GoogleRegisterRequest request) {
+        GoogleTokenInfoResponse googleUser = verifyGoogleIdToken(request.getIdToken());
+
+        if (userRepository.findByEmail(googleUser.getEmail()).isPresent()) {
+            throw new BadRequestException("Email already registered");
+        }
+
+        User user = User.builder()
+                .fullName(googleUser.getName())
+                .email(googleUser.getEmail())
+                .phoneNumber(request.getPhoneNumber())
+                // Google users never set a password — a random, never-shared
+                // hash keeps the NOT NULL column satisfied while making
+                // password-based login impossible for this account.
+                .passwordHash(passwordEncoder.encode(UUID.randomUUID().toString()))
+                .role(request.getRole())
+                .region(request.getRegion())
+                .district(request.getDistrict())
+                .profilePhotoUrl(googleUser.getPicture())
+                .isVerified(true)
+                .build();
+
+        try {
+            userRepository.save(user);
+        } catch (DataIntegrityViolationException e) {
+            log.warn("Google registration race detected, email was registered by a concurrent request: {}",
+                    googleUser.getEmail());
+            throw new BadRequestException("Email already registered");
+        }
+        log.info("User created via Google Sign-In: id={}, email={}", user.getId(), user.getEmail());
+
+        String token = jwtService.generateToken(user);
+        return AuthResponse.builder()
+                .token(token)
+                .user(UserMapper.toDto(user))
+                .build();
+    }
+
+    // Verifies the ID token against Google's tokeninfo endpoint: the "aud"
+    // claim must match our OAuth client id (otherwise a token minted for a
+    // different app could be replayed here) and "email_verified" must be
+    // true. Never trust email/name/picture from the request body — only
+    // from this verified response.
+    private GoogleTokenInfoResponse verifyGoogleIdToken(String idToken) {
+        GoogleTokenInfoResponse response;
+        try {
+            response = restTemplate.getForObject(
+                    GOOGLE_TOKENINFO_URL + "?id_token={idToken}", GoogleTokenInfoResponse.class, idToken);
+        } catch (RestClientException e) {
+            log.warn("Google token verification request failed: {}", e.getMessage());
+            throw new UnauthorizedException("Invalid Google token");
+        }
+
+        if (response == null || response.getError() != null) {
+            String reason = response != null ? response.getErrorDescription() : "no response";
+            log.warn("Google token verification rejected: {}", reason);
+            throw new UnauthorizedException("Invalid Google token");
+        }
+        if (googleClientId == null || googleClientId.isBlank() || !googleClientId.equals(response.getAud())) {
+            log.warn("Google token aud did not match configured client id");
+            throw new UnauthorizedException("Invalid Google token");
+        }
+        if (!"true".equals(response.getEmailVerified())) {
+            throw new UnauthorizedException("Google account email is not verified");
+        }
+        if (response.getEmail() == null || response.getEmail().isBlank()) {
+            throw new UnauthorizedException("Invalid Google token");
+        }
+        return response;
     }
 
     public void forgotPassword(ForgotPasswordRequest request) {

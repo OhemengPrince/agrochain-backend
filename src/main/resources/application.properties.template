@@ -18,6 +18,9 @@ spring.jpa.properties.hibernate.format_sql=true
 jwt.secret=${JWT_SECRET:changeme}
 jwt.expiration=604800000
 
+# Google Sign-In (client ID is not a secret, safe to commit)
+google.oauth.client-id=${GOOGLE_OAUTH_CLIENT_ID:786947919564-djvun73vnscr8odt1goc5bq5qaus2m2m.apps.googleusercontent.com}
+
 # Mail
 spring.mail.host=${SPRING_MAIL_HOST:smtp-relay.brevo.com}
 spring.mail.port=${SPRING_MAIL_PORT:587}
