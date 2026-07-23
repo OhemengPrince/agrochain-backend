@@ -100,9 +100,9 @@ public class ProduceBatchService {
         return ProduceBatchMapper.toResponse(saved, getStages(saved));
     }
 
-    public List<BatchResponse> getCatalogue(String region, String district, String query, int size) {
+    public List<BatchResponse> getCatalogue(String region, String district, String cropName, String query, int size) {
         Pageable pageable = PageRequest.of(0, size);
-        return produceBatchRepository.findCatalogue(region, district, query, pageable).stream()
+        return produceBatchRepository.findCatalogue(region, district, cropName, query, pageable).stream()
                 .map(batch -> ProduceBatchMapper.toResponse(batch, getStages(batch)))
                 .toList();
     }

@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 public interface MarketplaceListingRepository extends JpaRepository<MarketplaceListing, Long> {
@@ -22,9 +23,16 @@ public interface MarketplaceListingRepository extends JpaRepository<MarketplaceL
     @Query("SELECT l FROM MarketplaceListing l WHERE " +
             "l.status = com.agrochain.backend.model.ListingStatus.ACTIVE AND " +
             "(:category IS NULL OR l.category = :category) AND " +
-            "(:query IS NULL OR LOWER(l.name) LIKE LOWER(CONCAT('%', CAST(:query AS string), '%'))) " +
+            "(:region IS NULL OR l.region = :region) AND " +
+            "(:query IS NULL OR LOWER(l.name) LIKE LOWER(CONCAT('%', CAST(:query AS string), '%'))) AND " +
+            "(:minPrice IS NULL OR l.price >= :minPrice) AND " +
+            "(:maxPrice IS NULL OR l.price <= :maxPrice) " +
             "ORDER BY l.createdAt DESC")
-    List<MarketplaceListing> search(@Param("category") ListingCategory category, @Param("query") String query);
+    List<MarketplaceListing> search(@Param("category") ListingCategory category,
+                                     @Param("region") String region,
+                                     @Param("query") String query,
+                                     @Param("minPrice") BigDecimal minPrice,
+                                     @Param("maxPrice") BigDecimal maxPrice);
 
     @Query("SELECT l FROM MarketplaceListing l WHERE " +
             "l.status = com.agrochain.backend.model.ListingStatus.ACTIVE AND " +

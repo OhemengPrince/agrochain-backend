@@ -54,9 +54,10 @@ public class ProduceBatchController {
     public ResponseEntity<List<BatchResponse>> getCatalogue(
             @RequestParam(required = false) String region,
             @RequestParam(required = false) String district,
+            @RequestParam(required = false) String cropName,
             @RequestParam(required = false) String query,
             @RequestParam(defaultValue = "20") int size) {
-        return ResponseEntity.ok(produceBatchService.getCatalogue(region, district, query, size));
+        return ResponseEntity.ok(produceBatchService.getCatalogue(region, district, cropName, query, size));
     }
 
     @GetMapping("/scan")

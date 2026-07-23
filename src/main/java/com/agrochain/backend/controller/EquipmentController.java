@@ -14,6 +14,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
@@ -23,16 +24,21 @@ public class EquipmentController {
 
     private final EquipmentService equipmentService;
 
+    // "category" is EquipmentCategory (TRACTOR, HARVESTER, ...) — the
+    // equipment "type" filter.
     @GetMapping
     public ResponseEntity<Page<EquipmentResponse>> getAllEquipment(
             @RequestParam(required = false) String region,
             @RequestParam(required = false) String district,
             @RequestParam(required = false) EquipmentCategory category,
             @RequestParam(required = false) String query,
+            @RequestParam(required = false) BigDecimal minPrice,
+            @RequestParam(required = false) BigDecimal maxPrice,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "20") int size) {
         Pageable pageable = PageRequest.of(page, size);
-        return ResponseEntity.ok(equipmentService.getAllEquipment(region, district, category, query, pageable));
+        return ResponseEntity.ok(equipmentService.getAllEquipment(
+                region, district, category, query, minPrice, maxPrice, pageable));
     }
 
     @GetMapping("/my-listings")

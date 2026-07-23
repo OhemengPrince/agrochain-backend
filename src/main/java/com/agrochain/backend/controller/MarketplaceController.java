@@ -12,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 @RestController
@@ -25,8 +26,11 @@ public class MarketplaceController {
     @GetMapping("/listings")
     public ResponseEntity<List<ListingResponse>> getListings(
             @RequestParam(required = false) ListingCategory category,
-            @RequestParam(required = false) String query) {
-        return ResponseEntity.ok(marketplaceService.getListings(category, query));
+            @RequestParam(required = false) String region,
+            @RequestParam(required = false) String query,
+            @RequestParam(required = false) BigDecimal minPrice,
+            @RequestParam(required = false) BigDecimal maxPrice) {
+        return ResponseEntity.ok(marketplaceService.getListings(category, region, query, minPrice, maxPrice));
     }
 
     @GetMapping("/listings/mine")

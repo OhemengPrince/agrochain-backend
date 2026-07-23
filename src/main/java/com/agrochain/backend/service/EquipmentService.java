@@ -29,8 +29,9 @@ public class EquipmentService {
     private final FollowService followService;
 
     public Page<EquipmentResponse> getAllEquipment(String region, String district, EquipmentCategory category,
-                                                    String query, Pageable pageable) {
-        return equipmentRepository.search(region, district, category, query, pageable)
+                                                    String query, BigDecimal minPrice, BigDecimal maxPrice,
+                                                    Pageable pageable) {
+        return equipmentRepository.search(region, district, category, query, minPrice, maxPrice, pageable)
                 .map(EquipmentMapper::toResponse);
     }
 

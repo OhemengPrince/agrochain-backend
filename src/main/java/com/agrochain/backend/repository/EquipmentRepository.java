@@ -9,6 +9,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.math.BigDecimal;
 import java.util.List;
 
 public interface EquipmentRepository extends JpaRepository<Equipment, Long> {
@@ -24,11 +25,15 @@ public interface EquipmentRepository extends JpaRepository<Equipment, Long> {
             "(:district IS NULL OR e.district = :district) AND " +
             "(:category IS NULL OR e.category = :category) AND " +
             "(:query IS NULL OR LOWER(e.name) LIKE LOWER(CONCAT('%', CAST(:query AS string), '%'))) AND " +
+            "(:minPrice IS NULL OR e.dailyRate >= :minPrice) AND " +
+            "(:maxPrice IS NULL OR e.dailyRate <= :maxPrice) AND " +
             "e.isAvailable = true")
     Page<Equipment> search(@Param("region") String region,
                             @Param("district") String district,
                             @Param("category") EquipmentCategory category,
                             @Param("query") String query,
+                            @Param("minPrice") BigDecimal minPrice,
+                            @Param("maxPrice") BigDecimal maxPrice,
                             Pageable pageable);
 
     @Query("SELECT e FROM Equipment e WHERE e.isAvailable = true AND " +

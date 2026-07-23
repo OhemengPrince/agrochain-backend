@@ -24,9 +24,11 @@ public interface ProduceBatchRepository extends JpaRepository<ProduceBatch, Long
             "b.status = com.agrochain.backend.model.BatchStatus.READY_FOR_SALE AND " +
             "(:region IS NULL OR b.region = :region) AND " +
             "(:district IS NULL OR b.district = :district) AND " +
+            "(:cropName IS NULL OR LOWER(b.cropName) LIKE LOWER(CONCAT('%', CAST(:cropName AS string), '%'))) AND " +
             "(:query IS NULL OR LOWER(b.cropName) LIKE LOWER(CONCAT('%', CAST(:query AS string), '%')))")
     Page<ProduceBatch> findCatalogue(@Param("region") String region,
                                       @Param("district") String district,
+                                      @Param("cropName") String cropName,
                                       @Param("query") String query,
                                       Pageable pageable);
 

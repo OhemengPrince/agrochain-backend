@@ -16,6 +16,7 @@ import com.agrochain.backend.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -28,8 +29,9 @@ public class MarketplaceService {
     private final ReviewRepository reviewRepository;
     private final FollowService followService;
 
-    public List<ListingResponse> getListings(ListingCategory category, String query) {
-        return marketplaceListingRepository.search(category, query).stream()
+    public List<ListingResponse> getListings(ListingCategory category, String region, String query,
+                                              BigDecimal minPrice, BigDecimal maxPrice) {
+        return marketplaceListingRepository.search(category, region, query, minPrice, maxPrice).stream()
                 .map(listing -> MarketplaceMapper.toResponse(listing, getSellerRating(listing.getSeller())))
                 .toList();
     }
