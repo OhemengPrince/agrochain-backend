@@ -1,6 +1,7 @@
 package com.agrochain.backend.controller;
 
 import com.agrochain.backend.dto.BookingResponse;
+import com.agrochain.backend.dto.BookingReviewRequest;
 import com.agrochain.backend.dto.CreateBookingRequest;
 import com.agrochain.backend.dto.ReviewRequest;
 import com.agrochain.backend.service.BookingService;
@@ -55,6 +56,22 @@ public class BookingController {
     public ResponseEntity<Map<String, String>> submitReview(Authentication authentication,
                                                               @Valid @RequestBody ReviewRequest request) {
         bookingService.submitReview(authentication.getName(), request);
+        return ResponseEntity.ok(Map.of("message", "Review submitted successfully."));
+    }
+
+    // Path-based equivalent of POST /bookings/reviews (which takes bookingId
+    // in the body) — same bookingService.submitReview underneath, so the same
+    // validation applies: booking must exist, be COMPLETED, belong to the
+    // caller, and not already be reviewed.
+    @PostMapping("/{id}/review")
+    public ResponseEntity<Map<String, String>> reviewBooking(Authentication authentication, @PathVariable Long id,
+                                                               @Valid @RequestBody BookingReviewRequest request) {
+        ReviewRequest reviewRequest = ReviewRequest.builder()
+                .bookingId(id)
+                .rating(request.getRating())
+                .comment(request.getComment())
+                .build();
+        bookingService.submitReview(authentication.getName(), reviewRequest);
         return ResponseEntity.ok(Map.of("message", "Review submitted successfully."));
     }
 }

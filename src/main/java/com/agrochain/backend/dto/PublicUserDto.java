@@ -29,6 +29,7 @@ public class PublicUserDto {
     private boolean isVerified;
 
     private Double averageRating;
+    private long totalReviews;
     private Long followerCount;
     private Long followingCount;
 

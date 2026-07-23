@@ -111,7 +111,7 @@ public class UserService {
         Boolean isFollowing = viewerId == null ? null
                 : followRepository.existsByFollowerIdAndFollowingId(viewerId, user.getId());
 
-        return UserMapper.toPublicUserDto(user, averageRating, followerCount, followingCount, isFollowing);
+        return UserMapper.toPublicUserDto(user, averageRating, reviews.size(), followerCount, followingCount, isFollowing);
     }
 
     // Public — same safe field set as getPublicProfile. Only verified users

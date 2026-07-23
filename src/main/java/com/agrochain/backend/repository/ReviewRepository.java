@@ -13,4 +13,6 @@ public interface ReviewRepository extends JpaRepository<Review, Long> {
     Optional<Review> findByBooking(Booking booking);
 
     List<Review> findByReviewee(User reviewee);
+
+    List<Review> findByRevieweeOrderByCreatedAtDesc(User reviewee);
 }

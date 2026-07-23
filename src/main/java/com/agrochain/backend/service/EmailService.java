@@ -25,9 +25,11 @@ public class EmailService {
             helper.setSubject("AgroChain - Your OTP Code");
             helper.setText("Your OTP code for " + purpose + " is: " + otp
                     + "\n\nThis code will expire in 5 minutes.\n\nIf you did not request this, please ignore this email.");
+            log.info("Sending OTP email to {} with From header: {}", toEmail, mimeMessage.getFrom() != null ? mimeMessage.getFrom()[0] : "NONE");
             mailSender.send(mimeMessage);
+            log.info("OTP email handed off successfully to {}", toEmail);
         } catch (Exception e) {
-            log.error("Failed to send OTP email to {}: {}", toEmail, e.getMessage());
+            log.error("Failed to send OTP email to {}", toEmail, e);
         }
     }
 }
