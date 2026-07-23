@@ -1,6 +1,7 @@
 package com.agrochain.backend.service;
 
 import com.agrochain.backend.dto.EarningsDto;
+import com.agrochain.backend.dto.MonthlyEarningsSummaryDto;
 import com.agrochain.backend.dto.TransactionDto;
 import com.agrochain.backend.exception.BadRequestException;
 import com.agrochain.backend.exception.ResourceNotFoundException;
@@ -20,6 +21,14 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalDateTime;
+import java.time.YearMonth;
+import java.util.Comparator;
+import java.util.EnumSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 /**
  * AgroChain commission structure: buyer pays listed price + 5%, seller
@@ -34,6 +43,9 @@ public class EarningsService {
 
     private static final BigDecimal SELLER_NET_RATE = new BigDecimal("0.90");
     private static final BigDecimal SELLER_FEE_RATE = new BigDecimal("0.15");
+    private static final Set<TransactionType> INCOME_TYPES = EnumSet.of(
+            TransactionType.EQUIPMENT_RENTAL_INCOME, TransactionType.MARKETPLACE_SALE_INCOME,
+            TransactionType.PRODUCE_SALE_INCOME);
 
     private final EarningsRepository earningsRepository;
     private final TransactionRepository transactionRepository;
@@ -51,10 +63,72 @@ public class EarningsService {
     }
 
     public Page<TransactionDto> getTransactionHistory(Long userId, Pageable pageable) {
+        return getTransactionHistory(userId, null, null, null, null, pageable);
+    }
+
+    public Page<TransactionDto> getTransactionHistory(Long userId, TransactionType type,
+                                                        EarningsTransactionStatus status,
+                                                        LocalDateTime startDate, LocalDateTime endDate,
+                                                        Pageable pageable) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
-        return transactionRepository.findByUserOrderByCreatedAtDesc(user, pageable)
+        return transactionRepository.search(user, type, status, startDate, endDate, pageable)
                 .map(this::toDto);
+    }
+
+    // Unpaginated — same filters as getTransactionHistory, for reporting/export.
+    public List<TransactionDto> exportTransactions(Long userId, TransactionType type,
+                                                     EarningsTransactionStatus status,
+                                                     LocalDateTime startDate, LocalDateTime endDate) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        return transactionRepository.searchAll(user, type, status, startDate, endDate).stream()
+                .map(this::toDto)
+                .toList();
+    }
+
+    // Groups this user's whole transaction history by calendar month. Income
+    // types only count once COMPLETED (matches how availableBalance/
+    // totalEarned are only credited on confirmEarning, not on the initial
+    // PENDING row) — withdrawals count regardless of status since a
+    // PENDING/FAILED withdrawal still reflects money the user tried to move.
+    public List<MonthlyEarningsSummaryDto> getMonthlySummary(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+
+        Map<YearMonth, List<Transaction>> byMonth = transactionRepository.findByUser(user).stream()
+                .collect(Collectors.groupingBy(t -> YearMonth.from(t.getCreatedAt())));
+
+        return byMonth.entrySet().stream()
+                .sorted(Map.Entry.comparingByKey(Comparator.reverseOrder()))
+                .map(entry -> {
+                    List<Transaction> monthTransactions = entry.getValue();
+
+                    BigDecimal totalIncome = monthTransactions.stream()
+                            .filter(t -> INCOME_TYPES.contains(t.getType())
+                                    && t.getStatus() == EarningsTransactionStatus.COMPLETED)
+                            .map(Transaction::getNetAmount)
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+                    BigDecimal totalFees = monthTransactions.stream()
+                            .filter(t -> INCOME_TYPES.contains(t.getType())
+                                    && t.getStatus() == EarningsTransactionStatus.COMPLETED)
+                            .map(Transaction::getAgrochainFee)
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+                    BigDecimal totalWithdrawals = monthTransactions.stream()
+                            .filter(t -> t.getType() == TransactionType.WITHDRAWAL)
+                            .map(Transaction::getAmount)
+                            .reduce(BigDecimal.ZERO, BigDecimal::add);
+
+                    return MonthlyEarningsSummaryDto.builder()
+                            .month(entry.getKey().toString())
+                            .totalIncome(totalIncome)
+                            .totalFees(totalFees)
+                            .totalWithdrawals(totalWithdrawals)
+                            .build();
+                })
+                .toList();
     }
 
     // grossAmount is the base listed price (before AgroChain's cut). Credits

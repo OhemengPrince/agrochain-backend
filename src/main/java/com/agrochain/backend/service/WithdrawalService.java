@@ -8,6 +8,7 @@ import com.agrochain.backend.dto.WithdrawRequest;
 import com.agrochain.backend.dto.WithdrawalDto;
 import com.agrochain.backend.exception.BadRequestException;
 import com.agrochain.backend.exception.ResourceNotFoundException;
+import com.agrochain.backend.exception.UnauthorizedException;
 import com.agrochain.backend.model.EarningsTransactionStatus;
 import com.agrochain.backend.model.MomoNetwork;
 import com.agrochain.backend.model.TransactionType;
@@ -132,6 +133,15 @@ public class WithdrawalService {
         return withdrawalRepository.findByUserOrderByCreatedAtDesc(user).stream()
                 .map(this::toDto)
                 .toList();
+    }
+
+    public WithdrawalDto getWithdrawalById(String userEmail, Long id) {
+        Withdrawal withdrawal = withdrawalRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Withdrawal not found"));
+        if (!withdrawal.getUser().getEmail().equals(userEmail)) {
+            throw new UnauthorizedException("You do not own this withdrawal");
+        }
+        return toDto(withdrawal);
     }
 
     private String createTransferRecipient(WithdrawRequest request, User user) {
