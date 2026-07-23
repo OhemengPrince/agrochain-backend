@@ -8,6 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @Builder
@@ -26,6 +27,11 @@ public class ChatMessageResponse {
 
     @JsonProperty("isRead")
     private boolean isRead;
+
+    private Long replyToId;
+    private boolean deleted;
+    private List<ReactionSummary> reactions;
+    private String myReaction;
 
     private LocalDateTime createdAt;
 }

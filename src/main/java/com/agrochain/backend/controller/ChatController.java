@@ -46,6 +46,18 @@ public class ChatController {
         return ResponseEntity.ok(Map.of("message", "Messages marked as read."));
     }
 
+    @DeleteMapping("/messages/{id}")
+    public ResponseEntity<Void> deleteMessage(Authentication authentication, @PathVariable Long id) {
+        chatService.deleteMessage(id, authentication.getName());
+        return ResponseEntity.ok().build();
+    }
+
+    @PostMapping("/messages/{id}/react")
+    public ResponseEntity<List<ReactionSummary>> reactToMessage(Authentication authentication, @PathVariable Long id,
+                                                                  @Valid @RequestBody ReactionRequest request) {
+        return ResponseEntity.ok(chatService.reactToMessage(id, authentication.getName(), request.getEmoji()));
+    }
+
     @MessageMapping("/chat/{roomId}")
     public void receiveMessage(@DestinationVariable Long roomId, @Payload SendMessageRequest request, Principal principal) {
         ChatMessageResponse saved = chatService.saveMessage(roomId, principal.getName(), request.getContent());

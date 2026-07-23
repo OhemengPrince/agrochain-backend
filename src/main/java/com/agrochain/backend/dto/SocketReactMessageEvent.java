@@ -7,12 +7,9 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class SocketSendMessageEvent {
+public class SocketReactMessageEvent {
 
     private Long roomId;
-    private String content;
-    private String audioUrl;
-    private Integer audioDuration;
-    private String type;
-    private Long replyToId;
+    private Long messageId;
+    private String emoji;
 }

@@ -45,6 +45,13 @@ public class ChatMessage {
     @Column(nullable = false)
     private boolean isRead = false;
 
+    @Column(name = "reply_to_id")
+    private Long replyToId;
+
+    @Builder.Default
+    @Column(nullable = false)
+    private boolean deleted = false;
+
     @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 

@@ -3,8 +3,14 @@ package com.agrochain.backend.socketio;
 import com.agrochain.backend.dto.ChatMessageResponse;
 import com.agrochain.backend.dto.JoinRoomEvent;
 import com.agrochain.backend.dto.MarkReadEvent;
+import com.agrochain.backend.dto.MessageReactionBroadcast;
+import com.agrochain.backend.dto.ReactionSummary;
+import com.agrochain.backend.dto.SocketDeleteMessageEvent;
+import com.agrochain.backend.dto.SocketReactMessageEvent;
 import com.agrochain.backend.dto.SocketSendMessageEvent;
 import com.agrochain.backend.service.ChatService;
+
+import java.util.List;
 import com.corundumstudio.socketio.SocketIOServer;
 import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
@@ -52,12 +58,39 @@ public class SocketIOChatModule {
                     email, data.getRoomId(), preview(data.getContent()));
             try {
                 ChatMessageResponse saved = chatService.saveMessage(data.getRoomId(), email, data.getContent(),
-                        data.getAudioUrl(), data.getAudioDuration(), data.getType());
+                        data.getAudioUrl(), data.getAudioDuration(), data.getType(), data.getReplyToId());
                 server.getRoomOperations(roomChannel(data.getRoomId())).sendEvent("new_message", saved);
                 log.info("[SocketIO] message {} broadcast to {}", saved.getId(), roomChannel(data.getRoomId()));
             } catch (Exception e) {
                 log.warn("[SocketIO] send_message rejected: user={}, roomId={}, reason={}", email, data.getRoomId(), e.getMessage());
                 client.sendEvent("error", Map.of("event", "send_message", "message", errorMessage(e)));
+            }
+        });
+
+        server.addEventListener("delete_message", SocketDeleteMessageEvent.class, (client, data, ackSender) -> {
+            String email = client.get("email");
+            try {
+                chatService.deleteMessage(data.getMessageId(), email);
+                server.getRoomOperations(roomChannel(data.getRoomId()))
+                        .sendEvent("message_deleted", Map.of("messageId", data.getMessageId()));
+            } catch (Exception e) {
+                log.warn("[SocketIO] delete_message rejected: user={}, roomId={}, reason={}", email, data.getRoomId(), e.getMessage());
+                client.sendEvent("error", Map.of("event", "delete_message", "message", errorMessage(e)));
+            }
+        });
+
+        server.addEventListener("react_message", SocketReactMessageEvent.class, (client, data, ackSender) -> {
+            String email = client.get("email");
+            try {
+                List<ReactionSummary> reactions = chatService.reactToMessage(data.getMessageId(), email, data.getEmoji());
+                MessageReactionBroadcast broadcast = MessageReactionBroadcast.builder()
+                        .messageId(data.getMessageId())
+                        .reactions(reactions)
+                        .build();
+                server.getRoomOperations(roomChannel(data.getRoomId())).sendEvent("message_reaction", broadcast);
+            } catch (Exception e) {
+                log.warn("[SocketIO] react_message rejected: user={}, roomId={}, reason={}", email, data.getRoomId(), e.getMessage());
+                client.sendEvent("error", Map.of("event", "react_message", "message", errorMessage(e)));
             }
         });
 
@@ -72,7 +105,7 @@ public class SocketIOChatModule {
             }
         });
 
-        log.info("[SocketIO] Chat event handlers registered: join_room, send_message, mark_read");
+        log.info("[SocketIO] Chat event handlers registered: join_room, send_message, mark_read, delete_message, react_message");
     }
 
     private String roomChannel(Long roomId) {
