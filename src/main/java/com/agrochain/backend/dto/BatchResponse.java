@@ -10,6 +10,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 @Data
 @Builder
@@ -27,7 +28,7 @@ public class BatchResponse {
     private LocalDate plantedDate;
     private BatchStatus status;
     private String qrCodeValue;
-    private String inputs;
+    private List<Map<String, String>> inputs;
     private Long farmerId;
     private String farmerName;
     private String farmerPhone;

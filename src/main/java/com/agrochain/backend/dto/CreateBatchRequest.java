@@ -10,6 +10,8 @@ import lombok.NoArgsConstructor;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
 
 @Data
 @Builder
@@ -37,5 +39,6 @@ public class CreateBatchRequest {
 
     private LocalDate plantedDate;
 
-    private String inputs;
+    // e.g. [{"name":"Pesticides","quantity":"2","appliedDate":"2026-07-24"}]
+    private List<Map<String, String>> inputs;
 }

@@ -3,18 +3,22 @@ package com.agrochain.backend.service;
 import com.agrochain.backend.dto.AddStageRequest;
 import com.agrochain.backend.dto.BatchResponse;
 import com.agrochain.backend.dto.CreateBatchRequest;
+import com.agrochain.backend.exception.BadRequestException;
 import com.agrochain.backend.exception.ResourceNotFoundException;
 import com.agrochain.backend.exception.UnauthorizedException;
 import com.agrochain.backend.model.*;
 import com.agrochain.backend.repository.BatchStageRepository;
 import com.agrochain.backend.repository.ProduceBatchRepository;
 import com.agrochain.backend.repository.UserRepository;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 
 @Service
 @RequiredArgsConstructor
@@ -25,6 +29,7 @@ public class ProduceBatchService {
     private final UserRepository userRepository;
     private final NotificationService notificationService;
     private final FollowService followService;
+    private final ObjectMapper objectMapper;
 
     public BatchResponse createBatch(String farmerEmail, CreateBatchRequest request) {
         User farmer = getUserOrThrow(farmerEmail);
@@ -42,7 +47,7 @@ public class ProduceBatchService {
                 .district(request.getDistrict())
                 .plantedDate(request.getPlantedDate())
                 .status(BatchStatus.GROWING)
-                .inputs(request.getInputs())
+                .inputs(toJson(request.getInputs()))
                 .build();
 
         ProduceBatch saved = produceBatchRepository.save(batch);
@@ -131,5 +136,16 @@ public class ProduceBatchService {
     private User getUserOrThrow(String email) {
         return userRepository.findByEmail(email)
                 .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+    }
+
+    private String toJson(List<Map<String, String>> inputs) {
+        if (inputs == null) {
+            return null;
+        }
+        try {
+            return objectMapper.writeValueAsString(inputs);
+        } catch (JsonProcessingException e) {
+            throw new BadRequestException("Invalid inputs format: " + e.getMessage());
+        }
     }
 }
