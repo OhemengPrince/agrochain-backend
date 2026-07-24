@@ -47,6 +47,7 @@ public class ProduceBatchService {
                 .district(request.getDistrict())
                 .plantedDate(request.getPlantedDate())
                 .status(BatchStatus.GROWING)
+                .photoUrl(request.getPhotoUrl())
                 .inputs(toJson(request.getInputs()))
                 .build();
 

@@ -44,6 +44,7 @@ public final class ProduceBatchMapper {
                 .plantedDate(batch.getPlantedDate())
                 .status(batch.getStatus())
                 .qrCodeValue(batch.getQrCodeValue())
+                .photoUrl(batch.getPhotoUrl())
                 .inputs(parseInputs(batch.getInputs()))
                 .farmerId(batch.getFarmer().getId())
                 .farmerName(batch.getFarmer().getFullName())

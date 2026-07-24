@@ -52,6 +52,8 @@ public class ProduceBatch {
     @Column(unique = true)
     private String qrCodeValue;
 
+    private String photoUrl;
+
     // JSON-encoded array of {name, quantity, appliedDate} objects — see
     // CreateBatchRequest.inputs / BatchResponse.inputs for the structured
     // shape; this column stores the serialized form.

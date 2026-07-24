@@ -28,6 +28,7 @@ public class BatchResponse {
     private LocalDate plantedDate;
     private BatchStatus status;
     private String qrCodeValue;
+    private String photoUrl;
     private List<Map<String, String>> inputs;
     private Long farmerId;
     private String farmerName;
